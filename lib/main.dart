@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_doc_scanner/flutter_doc_scanner.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+
+import 'core/constants/app_constants.dart';
+import 'core/services/permission_service.dart';
+import 'features/scanner/data/repositories/scanner_repository_impl.dart';
+import 'features/scanner/domain/usecases/scan_document_usecase.dart';
+import 'features/pdf_generator/data/repositories/pdf_repository_impl.dart';
+import 'features/pdf_generator/domain/usecases/pdf_usecases.dart';
+import 'shared/models/scanned_document.dart';
 import 'dart:io';
+
 void main() {
   runApp(const MyApp());
 }
@@ -32,41 +35,35 @@ class ScannerHomePage extends StatefulWidget {
 }
 
 class _ScannerHomePageState extends State<ScannerHomePage> {
-  List<String> scannedImages = [];
+  final scannerUsecase = ScanDocumentUsecase(ScannerRepositoryImpl());
+  final pdfUsecase = GeneratePdfUsecase(PdfRepositoryImpl());
+  final sharePdfUsecase = SharePdfUsecase(PdfRepositoryImpl());
+
+  List<ScannedDocument> scannedDocuments = [];
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _requestPermissions();
+    PermissionService.requestPermissions();
   }
 
-  Future<void> _requestPermissions() async {
-    await Permission.camera.request();
-    await Permission.storage.request();
-  }
-
-  Future<void> _scanDocument() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future<void> _scanDocuments() async {
+    setState(() => isLoading = true);
 
     try {
-      final result = await FlutterDocScanner().getScanDocuments();
+      final documents = await scannerUsecase.call();
+      setState(() => scannedDocuments.addAll(documents));
 
-      if (result != null && result.isNotEmpty) {
-        setState(() {
-          scannedImages.addAll(result);
-        });
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Successfully scanned ${result.length} document(s)'),
-              backgroundColor: Colors.green,
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Successfully scanned ${documents.length} document(s)',
             ),
-          );
-        }
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -84,54 +81,28 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
     }
   }
 
-  Future<void> _generatePDF() async {
-    if (scannedImages.isEmpty) {
+  Future<void> _generatePdf() async {
+    if (scannedDocuments.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No scanned images to generate PDF'),
+          content: Text(AppConstants.noScannedImages),
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
-
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
-      final pdf = pw.Document();
-
-      for (String imagePath in scannedImages) {
-        final file = File(imagePath);
-        final imageBytes = await file.readAsBytes();
-        final image = pw.MemoryImage(imageBytes);
-
-        pdf.addPage(
-          pw.Page(
-            pageFormat: PdfPageFormat.a4,
-            build: (pw.Context context) {
-              return pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain));
-            },
-          ),
-        );
-      }
-
-      // Save PDF to device
-      final output = await getApplicationDocumentsDirectory();
-      final pdfPath =
-          '${output.path}/scanned_document_${DateTime.now().millisecondsSinceEpoch}.pdf';
-      final pdfFile = File(pdfPath);
-      await pdfFile.writeAsBytes(await pdf.save());
-
-      if (mounted) {
+      final pdfPath = await pdfUsecase.call(scannedDocuments);
+      if (mounted) { // Check if widget is still mounted
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('PDF saved to: $pdfPath'),
+            content: Text('${AppConstants.pdfSavedTo} $pdfPath'),
             backgroundColor: Colors.green,
             action: SnackBarAction(
-              label: 'Share',
-              onPressed: () => _sharePDF(pdfPath),
+              label: AppConstants.share,
+              onPressed: () => _sharePdf(pdfPath),
             ),
           ),
         );
@@ -152,9 +123,9 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
     }
   }
 
-  Future<void> _sharePDF(String pdfPath) async {
+  Future<void> _sharePdf(String pdfPath) async {
     try {
-      await Share.shareXFiles([XFile(pdfPath)]);
+      await sharePdfUsecase.call(pdfPath);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -167,21 +138,20 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
     }
   }
 
-  void _clearScannedImages() {
-    setState(() {
-      scannedImages.clear();
-    });
+
+  void _clearScannedDocuments() {
+    setState(() => scannedDocuments.clear());
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Cleared all scanned images'),
+        content: Text('Cleared all scanned documents'),
         backgroundColor: Colors.blue,
       ),
     );
   }
 
-  void _removeImage(int index) {
+  void _removeDocument(int index) {
     setState(() {
-      scannedImages.removeAt(index);
+      scannedDocuments.removeAt(index);
     });
   }
 
@@ -192,10 +162,10 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
         title: const Text('PDF Scanner'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
-          if (scannedImages.isNotEmpty)
+          if (scannedDocuments.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.clear_all),
-              onPressed: _clearScannedImages,
+              onPressed: _clearScannedDocuments,
               tooltip: 'Clear All',
             ),
         ],
@@ -212,7 +182,7 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
                   ],
                 ),
               )
-              : scannedImages.isEmpty
+              : scannedDocuments.isEmpty
               ? const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -243,14 +213,14 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Scanned Images (${scannedImages.length})',
+                    'Scanned Documents (${scannedDocuments.length})',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         ElevatedButton.icon(
-                          onPressed: _generatePDF,
+                          onPressed: _generatePdf,
                           icon: const Icon(Icons.picture_as_pdf),
                           label: const Text('Generate PDF'),
                           style: ElevatedButton.styleFrom(
@@ -271,7 +241,7 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
                             mainAxisSpacing: 8,
                             childAspectRatio: 0.7,
                           ),
-                      itemCount: scannedImages.length,
+                      itemCount: scannedDocuments.length,
                       itemBuilder: (context, index) {
                         return Card(
                           elevation: 4,
@@ -283,7 +253,7 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
                                     top: Radius.circular(8),
                                   ),
                                   child: Image.file(
-                                    File(scannedImages[index]),
+                                    scannedDocuments[index].imageFile,
                                     fit: BoxFit.cover,
                                     width: double.infinity,
                                   ),
@@ -297,12 +267,12 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.visibility),
-                                      onPressed: () => _previewImage(index),
+                                      onPressed: () => _previewImage(scannedDocuments[index].imagePath),
                                       tooltip: 'Preview',
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete),
-                                      onPressed: () => _removeImage(index),
+                                      onPressed: () => _removeDocument(index),
                                       tooltip: 'Delete',
                                       color: Colors.red,
                                     ),
@@ -326,28 +296,28 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
           SpeedDialChild(
             child: const Icon(Icons.document_scanner),
             label: 'Scan Document',
-            onTap: _scanDocument,
+              onTap: _scanDocuments,
           ),
-          if (scannedImages.isNotEmpty)
+          if (scannedDocuments.isNotEmpty)
             SpeedDialChild(
               child: const Icon(Icons.picture_as_pdf),
               label: 'Generate PDF',
-              onTap: _generatePDF,
+              onTap: _generatePdf,
             ),
         ],
       ),
     );
   }
 
-  void _previewImage(int index) {
+  void _previewImage(String imagePath) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder:
             (context) => ImagePreviewPage(
-              imagePath: scannedImages[index],
-              imageIndex: index + 1,
-              totalImages: scannedImages.length,
+              imagePath: imagePath,
+              imageIndex: scannedDocuments.indexWhere((doc) => doc.imagePath == imagePath) + 1,
+              totalImages: scannedDocuments.length,
             ),
       ),
     );
