@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter_doc_scanner/flutter_doc_scanner.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/models/scanned_document.dart';
 import '../../domain/repositories/scanner_repository.dart';
@@ -14,13 +16,49 @@ class ScannerRepositoryImpl implements ScannerRepository {
       // Allow EGL cleanup
       await Future.delayed(AppConstants.eglCleanupDelay);
       
-      if (result != null && result.isNotEmpty) {
-        return result;
+      
+      if (result != null) {
+        // Check for PDF URI
+        if (result is Map && result.containsKey('pdfUri')) {
+          final pdfUri = result['pdfUri'] as String?;
+          if (pdfUri != null) {
+            return await _copyPdfToAppDirectory(pdfUri);
+          }
+        } else if (result is List<String>) {
+          return result;
+        } else if (result is List) {
+          final paths = result.map((item) => item.toString()).toList();
+          return paths.where((path) => path.isNotEmpty && path != 'null').toList();
+        } else {
+          return [];
+        }
       }
       
       return [];
     } catch (e) {
       throw Exception('Failed to scan documents: $e');
+    }
+  }
+
+  /// Copy PDF from temporary location to app directory
+  Future<List<String>> _copyPdfToAppDirectory(String pdfUri) async {
+    try {
+      final sourceFile = File(pdfUri.replaceFirst('file://', ''));
+      if (!await sourceFile.exists()) {
+        return [];
+      }
+
+      // Get app temporary directory for caching
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'scanned_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final destinationPath = '${tempDir.path}/$fileName';
+      
+      // Copy the file to the cache directory
+      final destinationFile = await sourceFile.copy(destinationPath);
+      
+      return [destinationFile.path];
+    } catch (e) {
+      return [];
     }
   }
 

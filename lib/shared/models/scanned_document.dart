@@ -5,12 +5,14 @@ class ScannedDocument {
   final String imagePath;
   final DateTime createdAt;
   final String? title;
+  final bool isPdf;
 
   ScannedDocument({
     required this.id,
     required this.imagePath,
     required this.createdAt,
     this.title,
+    this.isPdf = false,
   });
 
   ScannedDocument copyWith({
@@ -18,12 +20,14 @@ class ScannedDocument {
     String? imagePath,
     DateTime? createdAt,
     String? title,
+    bool? isPdf,
   }) {
     return ScannedDocument(
       id: id ?? this.id,
       imagePath: imagePath ?? this.imagePath,
       createdAt: createdAt ?? this.createdAt,
       title: title ?? this.title,
+      isPdf: isPdf ?? this.isPdf,
     );
   }
 
@@ -40,7 +44,8 @@ class ScannedDocument {
         other.id == id &&
         other.imagePath == imagePath &&
         other.createdAt == createdAt &&
-        other.title == title;
+        other.title == title &&
+        other.isPdf == isPdf;
   }
 
   @override
@@ -48,12 +53,13 @@ class ScannedDocument {
     return id.hashCode ^
         imagePath.hashCode ^
         createdAt.hashCode ^
-        title.hashCode;
+        title.hashCode ^
+        isPdf.hashCode;
   }
 
   @override
   String toString() {
-    return 'ScannedDocument(id: $id, imagePath: $imagePath, createdAt: $createdAt, title: $title)';
+    return 'ScannedDocument(id: $id, imagePath: $imagePath, createdAt: $createdAt, title: $title, isPdf: $isPdf)';
   }
 
   Map<String, dynamic> toJson() {
@@ -62,6 +68,7 @@ class ScannedDocument {
       'imagePath': imagePath,
       'createdAt': createdAt.toIso8601String(),
       'title': title,
+      'isPdf': isPdf,
     };
   }
 
@@ -71,6 +78,7 @@ class ScannedDocument {
       imagePath: json['imagePath'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       title: json['title'] as String?,
+      isPdf: json['isPdf'] as bool? ?? false,
     );
   }
 }

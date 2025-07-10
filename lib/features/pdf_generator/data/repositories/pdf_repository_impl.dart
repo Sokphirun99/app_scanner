@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
+import 'package:path/path.dart' as p;
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -9,25 +11,43 @@ import '../../domain/repositories/pdf_repository.dart';
 
 class PdfRepositoryImpl implements PdfRepository {
   @override
-  Future<String> generatePdf(List<ScannedDocument> documents, {String? fileName}) async {
+  Future<String> generatePdf(
+    List<ScannedDocument> documents, {
+    String? fileName,
+  }) async {
     final pdf = pw.Document();
 
     for (var document in documents) {
-      final image = pw.MemoryImage(document.imageFile.readAsBytesSync());
+      if (document.exists) {
+        final rawImage = document.imageFile.readAsBytesSync();
+        final image = img.decodeImage(rawImage);
 
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          build: (pw.Context context) {
-            return pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain));
-          },
-        ),
-      );
+        if (image == null) {
+          // Skip this image if it can't be decoded
+          continue;
+        }
+
+        final encodedImage = img.encodePng(image);
+        final pdfImage = pw.MemoryImage(encodedImage);
+
+        pdf.addPage(
+          pw.Page(
+            pageFormat: PdfPageFormat.a4,
+            build: (pw.Context context) {
+              return pw.Center(
+                child: pw.Image(pdfImage, fit: pw.BoxFit.contain),
+              );
+            },
+          ),
+        );
+      }
     }
 
-    final output = await getApplicationDocumentsDirectory();
-    final pdfName = fileName ?? AppConstants.pdfFilePrefix + DateTime.now().millisecondsSinceEpoch.toString() + AppConstants.pdfExtension;
-    final pdfPath = '${output.path}/$pdfName';
+    final output = await getTemporaryDirectory();
+    final pdfName =
+        fileName ??
+        '${AppConstants.pdfFilePrefix}${DateTime.now().millisecondsSinceEpoch}${AppConstants.pdfExtension}';
+    final pdfPath = p.join(output.path, pdfName);
     final pdfFile = File(pdfPath);
     await pdfFile.writeAsBytes(await pdf.save());
 

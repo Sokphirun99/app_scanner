@@ -9,9 +9,23 @@ import 'features/pdf_generator/data/repositories/pdf_repository_impl.dart';
 import 'features/pdf_generator/domain/usecases/pdf_usecases.dart';
 import 'shared/models/scanned_document.dart';
 import 'dart:io';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = 'https://1b45803ca28e2a641c47f6679ee7edaa@o4509645142425600.ingest.us.sentry.io/4509645143801856';
+      // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+      // We recommend adjusting this value in production.
+      options.tracesSampleRate = 1.0;
+      // The sampling rate for profiling is relative to tracesSampleRate
+      // Setting to 1.0 will profile 100% of sampled transactions:
+      options.profilesSampleRate = 1.0;
+    },
+    appRunner: () => runApp(SentryWidget(child: const MyApp())),
+  );
+  // TODO: Remove this line after sending the first sample event to sentry.
+  await Sentry.captureException(Exception('This is a sample exception.'));
 }
 
 class MyApp extends StatelessWidget {
@@ -21,7 +35,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PDF Scanner App',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      theme: ThemeData(
+        primarySwatch: Colors.indigo,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        useMaterial3: true,
+      ),
       home: const ScannerHomePage(),
     );
   }
@@ -53,7 +71,17 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
 
     try {
       final documents = await scannerUsecase.call();
-      setState(() => scannedDocuments.addAll(documents));
+      final newDocuments = documents.map((doc) {
+        final isPdf = doc.imagePath.toLowerCase().endsWith('.pdf');
+        return ScannedDocument(
+          id: doc.id,
+          imagePath: doc.imagePath,
+          createdAt: doc.createdAt,
+          isPdf: isPdf,
+        );
+      }).toList();
+
+      setState(() => scannedDocuments.addAll(newDocuments));
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -95,7 +123,8 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
 
     try {
       final pdfPath = await pdfUsecase.call(scannedDocuments);
-      if (mounted) { // Check if widget is still mounted
+      if (mounted) {
+        // Check if widget is still mounted
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${AppConstants.pdfSavedTo} $pdfPath'),
@@ -138,7 +167,6 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
     }
   }
 
-
   void _clearScannedDocuments() {
     setState(() => scannedDocuments.clear());
     ScaffoldMessenger.of(context).showSnackBar(
@@ -159,153 +187,169 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PDF Scanner'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('PDF Scanner', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 1,
         actions: [
           if (scannedDocuments.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.clear_all),
+              icon: const Icon(Icons.delete_sweep_outlined),
               onPressed: _clearScannedDocuments,
               tooltip: 'Clear All',
             ),
         ],
       ),
-      body:
-          isLoading
-              ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Processing...'),
-                  ],
-                ),
-              )
-              : scannedDocuments.isEmpty
-              ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.document_scanner_outlined,
-                      size: 64,
-                      color: Colors.grey,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'No documents scanned yet',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Tap the camera button to start scanning',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              )
-              : Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                    'Scanned Documents (${scannedDocuments.length})',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: _generatePdf,
-                          icon: const Icon(Icons.picture_as_pdf),
-                          label: const Text('Generate PDF'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: GridView.builder(
-                      padding: const EdgeInsets.all(16),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                            childAspectRatio: 0.7,
-                          ),
-                      itemCount: scannedDocuments.length,
-                      itemBuilder: (context, index) {
-                        return Card(
-                          elevation: 4,
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(8),
-                                  ),
-                                  child: Image.file(
-                                    scannedDocuments[index].imageFile,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.visibility),
-                                      onPressed: () => _previewImage(scannedDocuments[index].imagePath),
-                                      tooltip: 'Preview',
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () => _removeDocument(index),
-                                      tooltip: 'Delete',
-                                      color: Colors.red,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+      body: isLoading
+          ? _buildLoadingState()
+          : scannedDocuments.isEmpty
+              ? _buildEmptyState()
+              : _buildDocumentsGrid(),
       floatingActionButton: SpeedDial(
-        icon: Icons.add,
+        icon: Icons.camera_alt_outlined,
         activeIcon: Icons.close,
-        backgroundColor: Colors.blue,
+        backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         children: [
           SpeedDialChild(
-            child: const Icon(Icons.document_scanner),
+            child: const Icon(Icons.document_scanner_outlined),
             label: 'Scan Document',
-              onTap: _scanDocuments,
+            onTap: _scanDocuments,
           ),
           if (scannedDocuments.isNotEmpty)
             SpeedDialChild(
-              child: const Icon(Icons.picture_as_pdf),
+              child: const Icon(Icons.picture_as_pdf_outlined),
               label: 'Generate PDF',
               onTap: _generatePdf,
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 20),
+          Text('Processing...', style: TextStyle(fontSize: 16)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.scanner_outlined,
+            size: 100,
+            color: Colors.grey[300],
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'No Documents Scanned',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.grey),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Tap the camera button to start scanning',
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDocumentsGrid() {
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16.0),
+          sliver: SliverToBoxAdapter(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${scannedDocuments.length} Scanned Document(s)',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _generatePdf,
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  label: const Text('Generate PDF'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.8,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final document = scannedDocuments[index];
+                return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                          child: document.isPdf
+                              ? const Icon(Icons.picture_as_pdf, size: 80, color: Colors.red)
+                              : Image.file(
+                                  document.imageFile,
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.visibility_outlined),
+                              onPressed: () => _previewImage(document.imagePath),
+                              tooltip: 'Preview',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                              onPressed: () => _removeDocument(index),
+                              tooltip: 'Delete',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              childCount: scannedDocuments.length,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -316,7 +360,11 @@ class _ScannerHomePageState extends State<ScannerHomePage> {
         builder:
             (context) => ImagePreviewPage(
               imagePath: imagePath,
-              imageIndex: scannedDocuments.indexWhere((doc) => doc.imagePath == imagePath) + 1,
+              imageIndex:
+                  scannedDocuments.indexWhere(
+                    (doc) => doc.imagePath == imagePath,
+                  ) +
+                  1,
               totalImages: scannedDocuments.length,
             ),
       ),
@@ -343,11 +391,25 @@ class ImagePreviewPage extends StatelessWidget {
         title: Text('Image $imageIndex of $totalImages'),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
+            tooltip: 'Close',
+          ),
+        ],
       ),
       backgroundColor: Colors.black,
       body: Center(
         child: InteractiveViewer(
-          child: Image.file(File(imagePath), fit: BoxFit.contain),
+          maxScale: 5.0,
+          minScale: 0.5,
+          child: Image.file(
+            File(imagePath),
+            fit: BoxFit.contain,
+            width: double.infinity,
+            height: double.infinity,
+          ),
         ),
       ),
     );
