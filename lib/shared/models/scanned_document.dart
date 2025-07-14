@@ -5,12 +5,14 @@ class ScannedDocument {
   final String imagePath;
   final DateTime createdAt;
   final String? title;
+  final bool isPdf;
 
   ScannedDocument({
     required this.id,
     required this.imagePath,
     required this.createdAt,
     this.title,
+    this.isPdf = false,
   });
 
   ScannedDocument copyWith({
@@ -18,12 +20,14 @@ class ScannedDocument {
     String? imagePath,
     DateTime? createdAt,
     String? title,
+    bool? isPdf,
   }) {
     return ScannedDocument(
       id: id ?? this.id,
       imagePath: imagePath ?? this.imagePath,
       createdAt: createdAt ?? this.createdAt,
       title: title ?? this.title,
+      isPdf: isPdf ?? this.isPdf,
     );
   }
 

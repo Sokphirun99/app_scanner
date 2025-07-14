@@ -50,8 +50,26 @@ dependencies:
   
   # UI components
   flutter_speed_dial: ^7.0.0
+  
+  # State management
+  flutter_bloc: ^8.1.6
+  equatable: ^2.0.5
+  
+  # Responsive design
+  flutter_screenutil: ^5.9.3
+  
+  # Animations
+  animations: ^2.0.11
+
+  # Image processing
+  image: ^4.1.7
+  path: ^1.9.0
+
+  # Crash and Error Reporting
+  sentry_flutter: ^8.4.0
 
 dev_dependencies:
+  sentry_dart_plugin: ^3.1.0
   flutter_test:
     sdk: flutter
 
@@ -103,3 +121,9 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: true
+  project: flutter
+  org: phirun

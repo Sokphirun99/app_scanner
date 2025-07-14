@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../shared/models/scanned_document.dart';
 
 class DocumentCard extends StatelessWidget {
@@ -17,35 +18,44 @@ class DocumentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
       child: Column(
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(8),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(12.r),
               ),
-              child: Image.file(
-                document.imageFile,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                errorBuilder: (context, error, stackTrace) {
-                  return _buildErrorWidget();
-                },
-              ),
+              child: document.isPdf 
+                  ? Icon(
+                      Icons.picture_as_pdf,
+                      size: 80.sp,
+                      color: Colors.red,
+                    )
+                  : Image.file(
+                      document.imageFile,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildErrorWidget();
+                      },
+                    ),
             ),
           ),
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(8.w),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.visibility),
+                  icon: Icon(Icons.visibility_outlined, size: 20.sp),
                   onPressed: onPreview,
                   tooltip: 'Preview',
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete),
+                  icon: Icon(Icons.delete_outline, size: 20.sp),
                   onPressed: onDelete,
                   tooltip: 'Delete',
                   color: Colors.red,
@@ -61,21 +71,21 @@ class DocumentCard extends StatelessWidget {
   Widget _buildErrorWidget() {
     return Container(
       color: Colors.grey[300],
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.error_outline,
-              size: 32,
+              size: 32.sp,
               color: Colors.grey,
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               'Error loading image',
               style: TextStyle(
                 color: Colors.grey,
-                fontSize: 12,
+                fontSize: 12.sp,
               ),
             ),
           ],

@@ -5,12 +5,14 @@ class ImagePreviewPage extends StatelessWidget {
   final String imagePath;
   final int imageIndex;
   final int totalImages;
+  final Function(String)? onImageDeleted;
 
   const ImagePreviewPage({
     super.key,
     required this.imagePath,
     required this.imageIndex,
     required this.totalImages,
+    this.onImageDeleted,
   });
 
   @override

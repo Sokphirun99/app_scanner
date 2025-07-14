@@ -7,8 +7,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:app_scanner/main.dart';
+
 void main() {
   testWidgets('PDF Scanner app loads correctly', (WidgetTester tester) async {
     // Build our app and trigger a frame.
@@ -21,10 +21,13 @@ void main() {
     expect(find.text('PDF Scanner'), findsOneWidget);
     
     // Verify that the empty state message is displayed.
-    expect(find.text('No documents scanned yet'), findsOneWidget);
-    expect(find.text('Tap the camera button to start scanning'), findsOneWidget);
+    expect(find.text('No Documents Scanned'), findsOneWidget);
+    expect(find.text('Tap the scan button to start scanning documents'), findsOneWidget);
     
     // Verify that the document scanner icon is present in the empty state.
-    expect(find.byIcon(Icons.document_scanner_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.document_scanner_outlined), findsWidgets);
+    
+    // Verify that the scan button is present
+    expect(find.text('Scan Document'), findsOneWidget);
   });
 }

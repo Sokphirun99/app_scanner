@@ -1,10 +1,23 @@
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+
+// Import the openAppSettings function
+import 'package:permission_handler/permission_handler.dart' as permission_handler;
 
 class PermissionService {
-  static const List<Permission> _requiredPermissions = [
-    Permission.camera,
-    Permission.storage,
-  ];
+  static List<Permission> get _requiredPermissions {
+    List<Permission> permissions = [Permission.camera];
+    
+    // For Android 13+ (API 33+), use specific media permissions
+    if (Platform.isAndroid) {
+      permissions.add(Permission.storage);
+      permissions.add(Permission.photos);
+    } else {
+      permissions.add(Permission.storage);
+    }
+    
+    return permissions;
+  }
 
   /// Request all required permissions for the app
   static Future<Map<Permission, PermissionStatus>> requestPermissions() async {
@@ -45,7 +58,7 @@ class PermissionService {
 
   /// Open app settings if permissions are denied permanently
   static Future<bool> openAppSettings() async {
-    return await openAppSettings();
+    return await permission_handler.openAppSettings();
   }
 
   /// Get permission name for display
