@@ -198,58 +198,88 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
 
   void _showImageInfo(BuildContext context) {
     final file = File(widget.imagePath);
-    if (!file.existsSync()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Image file not found'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
+    final fileExists = file.existsSync();
+    
+    // Collect detailed file information
+    final info = <String, dynamic>{
+      'path': widget.imagePath,
+      'exists': fileExists,
+    };
+    
+    if (fileExists) {
+      try {
+        final stat = file.statSync();
+        info.addAll({
+          'size': file.lengthSync(),
+          'sizeKB': (file.lengthSync() / 1024).toStringAsFixed(2),
+          'lastModified': file.lastModifiedSync().toString().split('.').first,
+          'permissions': stat.mode.toRadixString(8),
+          'type': stat.type.toString(),
+        });
+      } catch (e) {
+        info['statError'] = e.toString();
+      }
     }
-
-    final fileSize = file.lengthSync();
-    final fileSizeKB = (fileSize / 1024).toStringAsFixed(2);
+    
     final fileName = widget.imagePath.split('/').last;
     final fileExtension = fileName.split('.').last.toUpperCase();
-    final lastModified = file.lastModifiedSync();
 
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Image Information'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('File: $fileName'),
-                const SizedBox(height: 8),
-                Text('Format: $fileExtension'),
-                const SizedBox(height: 8),
-                Text('Size: $fileSizeKB KB'),
-                const SizedBox(height: 8),
-                Text('Modified: ${lastModified.toString().split('.').first}'),
-                const SizedBox(height: 8),
-                Text('Path: ${widget.imagePath}'),
-                const SizedBox(height: 8),
-                Text('Exists: ${_imageExists ? 'Yes' : 'No'}'),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    'Error: $_errorMessage',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ],
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Close'),
+      builder: (context) => AlertDialog(
+        title: const Text('Image Information'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('File: $fileName'),
+              const SizedBox(height: 8),
+              Text('Format: $fileExtension'),
+              const SizedBox(height: 8),
+              Text('Size: ${info['sizeKB'] ?? 'Unknown'} KB'),
+              const SizedBox(height: 8),
+              Text('Modified: ${info['lastModified'] ?? 'Unknown'}'),
+              const SizedBox(height: 8),
+              Text('Permissions: ${info['permissions'] ?? 'Unknown'}'),
+              const SizedBox(height: 8),
+              Text('Exists: ${info['exists'] ? 'Yes' : 'No'}'),
+              const SizedBox(height: 8),
+              Text('Loading State: ${_isLoading ? 'Loading' : 'Complete'}'),
+              const SizedBox(height: 8),
+              Text('Image Valid: ${_imageExists ? 'Yes' : 'No'}'),
+              const SizedBox(height: 12),
+              const Text('Full Path:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SelectableText(
+                widget.imagePath,
+                style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
               ),
+              if (_errorMessage != null) ...[
+                const SizedBox(height: 12),
+                const Text('Error:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ],
+              if (info['statError'] != null) ...[
+                const SizedBox(height: 12),
+                const Text('File System Error:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                Text(
+                  info['statError'].toString(),
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ],
             ],
           ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -305,6 +335,12 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
                         width: double.infinity,
                         height: double.infinity,
                         errorBuilder: (context, error, stackTrace) {
+                          debugPrint('Failed to load image: $error');
+                          debugPrint('Stack trace: $stackTrace');
+                          debugPrint('Image path: ${widget.imagePath}');
+                          debugPrint(
+                            'File exists: ${File(widget.imagePath).existsSync()}',
+                          );
                           return const Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -316,8 +352,9 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
                                 ),
                                 SizedBox(height: 16),
                                 Text(
-                                  'Failed to load image',
+                                  'Failed to load image. Please check the file path or permissions.',
                                   style: TextStyle(color: Colors.grey),
+                                  textAlign: TextAlign.center,
                                 ),
                               ],
                             ),

@@ -36,6 +36,27 @@ class ScannedDocument {
   bool get exists => imageFile.existsSync();
 
   String get fileName => imagePath.split('/').last;
+  
+  /// Get detailed file information for debugging
+  Map<String, dynamic> get fileInfo {
+    final file = imageFile;
+    try {
+      return {
+        'path': imagePath,
+        'exists': file.existsSync(),
+        'size': file.existsSync() ? file.lengthSync() : 0,
+        'extension': fileName.split('.').last.toLowerCase(),
+        'lastModified': file.existsSync() ? file.lastModifiedSync().toIso8601String() : null,
+        'isReadable': file.existsSync() && file.statSync().mode & 0x100 != 0,
+      };
+    } catch (e) {
+      return {
+        'path': imagePath,
+        'exists': false,
+        'error': e.toString(),
+      };
+    }
+  }
 
   @override
   bool operator ==(Object other) {

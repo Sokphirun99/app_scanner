@@ -25,10 +25,11 @@ class ScannerRepositoryImpl implements ScannerRepository {
             return await _copyPdfToAppDirectory(pdfUri);
           }
         } else if (result is List<String>) {
-          return result;
+          return await _validateAndCopyImageFiles(result);
         } else if (result is List) {
           final paths = result.map((item) => item.toString()).toList();
-          return paths.where((path) => path.isNotEmpty && path != 'null').toList();
+          final validPaths = paths.where((path) => path.isNotEmpty && path != 'null').toList();
+          return await _validateAndCopyImageFiles(validPaths);
         } else {
           return [];
         }
@@ -40,6 +41,60 @@ class ScannerRepositoryImpl implements ScannerRepository {
     }
   }
 
+  /// Validate and copy image files to app directory
+  Future<List<String>> _validateAndCopyImageFiles(List<String> imagePaths) async {
+    final validPaths = <String>[];
+    
+    try {
+      // Get app temporary directory for caching
+      final tempDir = await getTemporaryDirectory();
+      
+      for (final path in imagePaths) {
+        try {
+          // Clean the path and create source file
+          final cleanPath = path.replaceFirst('file://', '');
+          final sourceFile = File(cleanPath);
+          
+          // Check if source file exists
+          if (!await sourceFile.exists()) {
+            print('Source file does not exist: $cleanPath');
+            continue;
+          }
+          
+          // Check if it's a valid image file
+          final extension = cleanPath.split('.').last.toLowerCase();
+          if (!['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].contains(extension)) {
+            print('Invalid image extension: $extension');
+            continue;
+          }
+          
+          // Generate new filename and destination path
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final fileName = 'scanned_image_${timestamp}_${validPaths.length}.$extension';
+          final destinationPath = '${tempDir.path}/$fileName';
+          
+          // Copy the file to the cache directory
+          final destinationFile = await sourceFile.copy(destinationPath);
+          
+          // Verify the copied file exists and is readable
+          if (await destinationFile.exists()) {
+            validPaths.add(destinationFile.path);
+            print('Successfully copied image: ${destinationFile.path}');
+          } else {
+            print('Failed to copy image: $cleanPath');
+          }
+        } catch (e) {
+          print('Error processing image path $path: $e');
+        }
+      }
+      
+      return validPaths;
+    } catch (e) {
+      print('Error in _validateAndCopyImageFiles: $e');
+      return [];
+    }
+  }
+  
   /// Copy PDF from temporary location to app directory
   Future<List<String>> _copyPdfToAppDirectory(String pdfUri) async {
     try {
