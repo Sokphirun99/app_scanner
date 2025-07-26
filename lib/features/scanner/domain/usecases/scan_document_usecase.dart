@@ -12,15 +12,18 @@ class ScanDocumentUsecase {
       final imagePaths = await repository.scanDocuments();
       final documents = <ScannedDocument>[];
       
+      
       for (String path in imagePaths) {
-        final document = ScannedDocument(
-          id: DateTime.now().millisecondsSinceEpoch.toString() + path.hashCode.toString(),
-          imagePath: path,
-          createdAt: DateTime.now(),
-        );
-        
-        await repository.addScannedDocument(document);
-        documents.add(document);
+        if (path.isNotEmpty) {
+          final document = ScannedDocument(
+            id: DateTime.now().millisecondsSinceEpoch.toString() + path.hashCode.toString(),
+            imagePath: path,
+            createdAt: DateTime.now(),
+          );
+          
+          await repository.addScannedDocument(document);
+          documents.add(document);
+        }
       }
       
       return documents;

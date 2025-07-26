@@ -36,6 +36,27 @@ class ScannedDocument {
   bool get exists => imageFile.existsSync();
 
   String get fileName => imagePath.split('/').last;
+  
+  /// Get detailed file information for debugging
+  Map<String, dynamic> get fileInfo {
+    final file = imageFile;
+    try {
+      return {
+        'path': imagePath,
+        'exists': file.existsSync(),
+        'size': file.existsSync() ? file.lengthSync() : 0,
+        'extension': fileName.split('.').last.toLowerCase(),
+        'lastModified': file.existsSync() ? file.lastModifiedSync().toIso8601String() : null,
+        'isReadable': file.existsSync() && file.statSync().mode & 0x100 != 0,
+      };
+    } catch (e) {
+      return {
+        'path': imagePath,
+        'exists': false,
+        'error': e.toString(),
+      };
+    }
+  }
 
   @override
   bool operator ==(Object other) {
@@ -44,7 +65,8 @@ class ScannedDocument {
         other.id == id &&
         other.imagePath == imagePath &&
         other.createdAt == createdAt &&
-        other.title == title;
+        other.title == title &&
+        other.isPdf == isPdf;
   }
 
   @override
@@ -52,12 +74,13 @@ class ScannedDocument {
     return id.hashCode ^
         imagePath.hashCode ^
         createdAt.hashCode ^
-        title.hashCode;
+        title.hashCode ^
+        isPdf.hashCode;
   }
 
   @override
   String toString() {
-    return 'ScannedDocument(id: $id, imagePath: $imagePath, createdAt: $createdAt, title: $title)';
+    return 'ScannedDocument(id: $id, imagePath: $imagePath, createdAt: $createdAt, title: $title, isPdf: $isPdf)';
   }
 
   Map<String, dynamic> toJson() {
@@ -66,6 +89,7 @@ class ScannedDocument {
       'imagePath': imagePath,
       'createdAt': createdAt.toIso8601String(),
       'title': title,
+      'isPdf': isPdf,
     };
   }
 
@@ -75,6 +99,7 @@ class ScannedDocument {
       imagePath: json['imagePath'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       title: json['title'] as String?,
+      isPdf: json['isPdf'] as bool? ?? false,
     );
   }
 }

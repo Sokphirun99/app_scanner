@@ -1,15 +1,20 @@
+<<<<<<< HEAD
 import 'dart:io';
 import 'package:flutter_doc_scanner/flutter_doc_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/models/scanned_document.dart';
+=======
+>>>>>>> fix-error
 import '../../domain/repositories/scanner_repository.dart';
+import '../../../../shared/models/scanned_document.dart';
 
 class ScannerRepositoryImpl implements ScannerRepository {
   final List<ScannedDocument> _documents = [];
 
   @override
   Future<List<String>> scanDocuments() async {
+<<<<<<< HEAD
     try {
       print('DEBUG: Starting document scan...');
       final result = await FlutterDocScanner().getScanDocuments();
@@ -64,6 +69,11 @@ class ScannerRepositoryImpl implements ScannerRepository {
       }
       throw Exception('Failed to scan documents: $e');
     }
+=======
+    // Placeholder implementation
+    // In a real app, this would integrate with camera/scanner functionality
+    return [];
+>>>>>>> fix-error
   }
   
   Future<List<String>> _copyImagesToCacheStorage(List<String> tempPaths) async {

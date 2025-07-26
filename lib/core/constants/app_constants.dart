@@ -39,6 +39,7 @@ class AppConstants {
   static const int gridCrossAxisCount = 2;
   
   // Durations
-  static const Duration eglCleanupDelay = Duration(milliseconds: 300);
+  static const String sentryDsn = 'YOUR_SENTRY_DSN_HERE';
   static const Duration snackBarDuration = Duration(seconds: 3);
+  static const Duration eglCleanupDelay = Duration(milliseconds: 500);
 }
