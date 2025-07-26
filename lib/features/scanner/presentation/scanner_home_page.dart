@@ -1,12 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:animations/animations.dart';
 import '../../../shared/models/scanned_document.dart';
 import 'bloc/scanner_bloc.dart';
 import 'bloc/scanner_event.dart';
 import 'bloc/scanner_state.dart';
-import 'image_preview_page.dart';
 import 'widgets/document_card.dart';
 import 'widgets/empty_state_widget.dart';
 import 'widgets/loading_widget.dart';
@@ -163,25 +162,10 @@ class ScannerHomePage extends StatelessWidget {
       ),
       itemCount: documents.length,
       itemBuilder: (context, index) {
-        return OpenContainer(
-          closedBuilder: (context, action) => DocumentCard(
-            document: documents[index],
-            onPreview: () => _previewImage(context, documents[index].imagePath, documents, index),
-            onDelete: () => context.read<ScannerBloc>().add(RemoveDocumentEvent(index)),
-          ),
-          openBuilder: (context, action) => ImagePreviewPage(
-            imagePath: documents[index].imagePath,
-            imageIndex: index + 1,
-            totalImages: documents.length,
-            onImageDeleted: (deletedPath) {
-              final deletedIndex = documents.indexWhere((doc) => doc.imagePath == deletedPath);
-              if (deletedIndex != -1) {
-                context.read<ScannerBloc>().add(RemoveDocumentEvent(deletedIndex));
-              }
-            },
-          ),
-          transitionType: ContainerTransitionType.fade,
-          transitionDuration: const Duration(milliseconds: 300),
+        return DocumentCard(
+          document: documents[index],
+          onPreview: () => _previewImage(context, documents[index].imagePath, documents, index),
+          onDelete: () => context.read<ScannerBloc>().add(RemoveDocumentEvent(index)),
         );
       },
     );
@@ -202,19 +186,14 @@ class ScannerHomePage extends StatelessWidget {
   }
 
   void _previewImage(BuildContext context, String imagePath, List<ScannedDocument> documents, int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ImagePreviewPage(
-          imagePath: imagePath,
-          imageIndex: index + 1,
-          totalImages: documents.length,
-          onImageDeleted: (deletedPath) {
-            final deletedIndex = documents.indexWhere((doc) => doc.imagePath == deletedPath);
-            if (deletedIndex != -1) {
-              context.read<ScannerBloc>().add(RemoveDocumentEvent(deletedIndex));
-            }
-          },
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: InteractiveViewer(
+          child: Image.file(
+            File(imagePath),
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );

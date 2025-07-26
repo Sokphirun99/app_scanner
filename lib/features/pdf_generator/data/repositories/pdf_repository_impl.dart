@@ -11,8 +11,10 @@ import '../../domain/repositories/pdf_repository.dart';
 
 class PdfRepositoryImpl implements PdfRepository {
   @override
-<<<<<<< HEAD
-  Future<String> generatePdf(List<ScannedDocument> documents, {String? fileName}) async {
+  Future<String> generatePdf(
+    List<ScannedDocument> documents, {
+    String? fileName,
+  }) async {
     if (documents.isEmpty) {
       throw Exception('No documents provided for PDF generation');
     }
@@ -26,48 +28,30 @@ class PdfRepositoryImpl implements PdfRepository {
         // Check if the image file exists
         if (!document.exists) {
           print('DEBUG: Image file does not exist: ${document.imagePath}');
-          throw Exception('Image file does not exist: ${document.imagePath}');
+          continue; // Skip this document instead of throwing
         }
         
         print('DEBUG: Image file exists, reading bytes...');
         
-        // Read the image file
-        final imageBytes = document.imageFile.readAsBytesSync();
-        if (imageBytes.isEmpty) {
-          print('DEBUG: Image file is empty: ${document.imagePath}');
-          throw Exception('Image file is empty: ${document.imagePath}');
-        }
-        
-        print('DEBUG: Image bytes read successfully, size: ${imageBytes.length}');
-
-        final image = pw.MemoryImage(imageBytes);
-=======
-  Future<String> generatePdf(
-    List<ScannedDocument> documents, {
-    String? fileName,
-  }) async {
-    final pdf = pw.Document();
-
-    for (var document in documents) {
-      if (document.exists) {
+        // Read and decode the image
         final rawImage = document.imageFile.readAsBytesSync();
         final image = img.decodeImage(rawImage);
-
+        
         if (image == null) {
-          // Skip this image if it can't be decoded
-          continue;
+          print('DEBUG: Could not decode image: ${document.imagePath}');
+          continue; // Skip this image if it can't be decoded
         }
-
+        
         final encodedImage = img.encodePng(image);
         final pdfImage = pw.MemoryImage(encodedImage);
->>>>>>> fix-error
 
         pdf.addPage(
           pw.Page(
             pageFormat: PdfPageFormat.a4,
             build: (pw.Context context) {
-<<<<<<< HEAD
-              return pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain));
+              return pw.Center(
+                child: pw.Image(pdfImage, fit: pw.BoxFit.contain),
+              );
             },
           ),
         );
@@ -75,38 +59,17 @@ class PdfRepositoryImpl implements PdfRepository {
         print('DEBUG: Added page to PDF for ${document.imagePath}');
       } catch (e) {
         print('DEBUG: Error processing image ${document.imagePath}: $e');
-        throw Exception('Error processing image ${document.imagePath}: $e');
-=======
-              return pw.Center(
-                child: pw.Image(pdfImage, fit: pw.BoxFit.contain),
-              );
-            },
-          ),
-        );
->>>>>>> fix-error
+        continue; // Skip this image and continue with others
       }
     }
 
     final output = await getTemporaryDirectory();
-<<<<<<< HEAD
-    final pdfName = fileName ?? AppConstants.pdfFilePrefix + DateTime.now().millisecondsSinceEpoch.toString() + AppConstants.pdfExtension;
-    final pdfPath = '${output.path}/cache/$pdfName';
-    
-    print('DEBUG: PDF will be saved to: $pdfPath');
-    
-    // Create cache directory if it doesn't exist
-    final cacheDir = Directory('${output.path}/cache');
-    if (!cacheDir.existsSync()) {
-      print('DEBUG: Creating cache directory: ${cacheDir.path}');
-      cacheDir.createSync(recursive: true);
-    }
-    
-=======
     final pdfName =
         fileName ??
         '${AppConstants.pdfFilePrefix}${DateTime.now().millisecondsSinceEpoch}${AppConstants.pdfExtension}';
     final pdfPath = p.join(output.path, pdfName);
->>>>>>> fix-error
+    
+    print('DEBUG: PDF will be saved to: $pdfPath');
     final pdfFile = File(pdfPath);
     
     try {

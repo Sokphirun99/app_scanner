@@ -71,7 +71,7 @@ dependencies:
   
   # UI components
   flutter_speed_dial: ^7.0.0
-<<<<<<< HEAD
+  flutter_staggered_animations: ^1.1.1
   
   # State management
   flutter_bloc: ^8.1.6
@@ -82,13 +82,6 @@ dependencies:
   
   # Animations
   animations: ^2.0.11
-
-  # Image processing
-  image: ^4.1.7
-  path: ^1.9.0
-
-=======
-  flutter_staggered_animations: ^1.1.1
   
   # Markdown processing
   flutter_markdown: ^0.6.18
@@ -98,7 +91,6 @@ dependencies:
   flutter_html: ^3.0.0-beta.2
   webview_flutter: ^4.4.4
   
->>>>>>> fix-error
   # Crash and Error Reporting
   sentry_flutter: ^8.4.0
 
