@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import '../data/services/pdf_viewer_service.dart';
+import 'widgets/pdf_info_dialog.dart';
 
 class ImagePreviewPage extends StatelessWidget {
   final String imagePath;
@@ -73,47 +76,90 @@ class ImagePreviewPage extends StatelessWidget {
 
   Widget _buildPreviewBody(BuildContext context) {
     if (imagePath.toLowerCase().endsWith('.pdf')) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.picture_as_pdf,
-              size: 100.r,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            SizedBox(height: 20.h),
-            Text(
-              'PDF Document',
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (totalImages != null && imageIndex != null)
-              Text(
-                'Document ${imageIndex! + 1} of $totalImages',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  color: Colors.grey[600],
+      return Stack(
+        children: [
+          SfPdfViewer.file(
+            File(imagePath),
+            enableDoubleTapZooming: true,
+            canShowScrollHead: true,
+            canShowScrollStatus: true,
+            pageSpacing: 4.0,
+          ),
+          if (totalImages != null && imageIndex != null)
+            Positioned(
+              bottom: 20,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 153, red: 0, green: 0, blue: 0),
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Text(
+                    'Document ${imageIndex! + 1} of $totalImages',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
-            SizedBox(height: 10.h),
-            ElevatedButton.icon(
-              icon: Icon(Icons.open_in_new),
-              label: Text('Open PDF'),
+            ),
+          Positioned(
+            top: 20,
+            right: 20,
+            child: FloatingActionButton(
+              heroTag: 'open_external',
+              mini: true,
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              onPressed: () async {
+                final service = PdfViewerService();
+                final opened = await service.openPdfWithExternalApp(imagePath);
+                if (!opened && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No app found to open PDF files'),
+                    ),
+                  );
+                }
+              },
+              child: const Icon(Icons.open_in_new),
+            ),
+          ),
+          Positioned(
+            top: 20,
+            right: 140,
+            child: FloatingActionButton(
+              heroTag: 'pdf_info',
+              mini: true,
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
               onPressed: () {
-                // Here you would implement PDF viewing functionality
-                // This could be done with a PDF viewer package
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('PDF viewing will be implemented soon'),
-                  ),
+                showDialog(
+                  context: context,
+                  builder: (context) => PdfInfoDialog(filePath: imagePath),
                 );
               },
+              child: const Icon(Icons.info_outline),
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            top: 20,
+            right: 80,
+            child: FloatingActionButton(
+              heroTag: 'share_pdf',
+              mini: true,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              onPressed: () async {
+                final service = PdfViewerService();
+                await service.sharePdf(imagePath);
+              },
+              child: const Icon(Icons.share),
+            ),
+          ),
+        ],
       );
     } else {
       // For image files

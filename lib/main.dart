@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'core/theme/app_theme.dart';
 import 'features/home/presentation/modern_home_page.dart';
 import 'core/services/permission_service.dart';
@@ -62,13 +63,30 @@ class MyApp extends StatelessWidget {
         minTextAdapt: true,
         splitScreenMode: true,
         builder: (context, child) {
-          return MaterialApp(
-            title: 'PDF Scanner Pro',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: ThemeMode.system,
-            home: const ModernHomePage(),
+          return DynamicColorBuilder(
+            builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+              // Use dynamic color scheme if available, otherwise fallback to our app theme
+              return MaterialApp(
+                title: 'PDF Scanner Pro',
+                debugShowCheckedModeBanner: false,
+                theme: lightDynamic != null
+                    ? ThemeData(
+                        useMaterial3: true,
+                        colorScheme: lightDynamic,
+                        brightness: Brightness.light,
+                      )
+                    : AppTheme.lightTheme,
+                darkTheme: darkDynamic != null
+                    ? ThemeData(
+                        useMaterial3: true,
+                        colorScheme: darkDynamic,
+                        brightness: Brightness.dark,
+                      )
+                    : AppTheme.darkTheme,
+                themeMode: ThemeMode.system,
+                home: const ModernHomePage(),
+              );
+            }
           );
         },
       ),
