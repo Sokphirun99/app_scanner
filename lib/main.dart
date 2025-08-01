@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/theme/app_theme.dart';
-import 'features/home/presentation/home_page.dart';
+import 'features/home/presentation/modern_home_page.dart';
 import 'core/services/permission_service.dart';
 
 Future<void> main() async {
@@ -42,12 +42,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'PDF Tools Pro',
+      title: 'PDF Scanner Pro',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      home: const HomePage(),
+      home: const ModernHomePage(),
     );
   }
 }
