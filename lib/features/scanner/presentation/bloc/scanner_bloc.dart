@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../shared/models/scanned_document.dart';
 import '../../domain/usecases/scan_document_usecase.dart';
 import '../../../pdf_generator/domain/usecases/pdf_usecases.dart';
+import '../../data/services/doc_scanner_service.dart';
 import 'scanner_event.dart';
 import 'scanner_state.dart';
 
@@ -9,6 +10,7 @@ class ScannerBloc extends Bloc<ScannerEvent, ScannerState> {
   final ScanDocumentUsecase scanDocumentUsecase;
   final GeneratePdfUsecase generatePdfUsecase;
   final SharePdfUsecase sharePdfUsecase;
+  final DocScannerService _docScannerService = DocScannerService();
 
   // ignore: prefer_final_fields
   List<ScannedDocument> _documents = [];
@@ -17,8 +19,9 @@ class ScannerBloc extends Bloc<ScannerEvent, ScannerState> {
     required this.scanDocumentUsecase,
     required this.generatePdfUsecase,
     required this.sharePdfUsecase,
-  }) : super(ScannerInitial()) {
+  }) : super(ScannerInitial(const [])) {
     on<ScanDocumentEvent>(_onScanDocument);
+    on<ScanDocumentToPdfEvent>(_onScanDocumentToPdf);
     on<ScanCancelledEvent>(_onScanCancelled);
     on<GeneratePdfEvent>(_onGeneratePdf);
     on<ClearDocumentsEvent>(_onClearDocuments);
@@ -43,8 +46,6 @@ class ScannerBloc extends Bloc<ScannerEvent, ScannerState> {
       
       final newDocuments = documents.map((doc) {
         final isPdf = doc.imagePath.toLowerCase().endsWith('.pdf');
-        print('DEBUG: Scanned document path: ${doc.imagePath}');
-        print('DEBUG: File exists: ${doc.exists}');
         return ScannedDocument(
           id: doc.id,
           imagePath: doc.imagePath,
@@ -77,27 +78,53 @@ class ScannerBloc extends Bloc<ScannerEvent, ScannerState> {
   
   Future<void> _generatePdfAutomatically(Emitter<ScannerState> emit) async {
     try {
-      // Debug: Check if all documents exist
+      // Check if all documents exist
       final validDocuments = _documents.where((doc) => doc.exists).toList();
-      print('DEBUG: Auto-generating PDF...');
-      print('DEBUG: Total documents: ${_documents.length}');
-      print('DEBUG: Valid documents: ${validDocuments.length}');
       
       if (validDocuments.isEmpty) {
-        print('DEBUG: No valid documents for PDF generation');
         return;
       }
       
       final pdfPath = await generatePdfUsecase.call(_documents);
-      print('DEBUG: PDF auto-generated at: $pdfPath');
       emit(PdfGenerated(pdfPath, List.from(_documents)));
     } catch (e) {
-      print('DEBUG: Auto PDF generation error: $e');
       // Don't emit error for auto-generation failure, just log it
       // The user can still manually generate PDF later
     }
   }
 
+  /// Scan document directly to PDF
+  Future<void> _onScanDocumentToPdf(
+    ScanDocumentToPdfEvent event,
+    Emitter<ScannerState> emit,
+  ) async {
+    emit(ScannerLoading());
+    
+    try {
+      final pdfPath = await _docScannerService.scanDocumentsAsPdf(pageLimit: 10);
+      
+      if (pdfPath == null) {
+        // User cancelled scanning
+        emit(ScannerLoaded(List.from(_documents)));
+        return;
+      }
+      
+      // Create a ScannedDocument from the PDF
+      final pdfDocument = ScannedDocument(
+        id: DateTime.now().millisecondsSinceEpoch.toString() + pdfPath.hashCode.toString(),
+        imagePath: pdfPath,
+        createdAt: DateTime.now(),
+        isPdf: true,
+      );
+      
+      _documents.add(pdfDocument);
+      
+      emit(PdfGenerated(pdfPath, List.from(_documents)));
+    } catch (e) {
+      emit(ScannerError('Error scanning to PDF: $e', List.from(_documents)));
+    }
+  }
+  
   Future<void> _onScanCancelled(
     ScanCancelledEvent event,
     Emitter<ScannerState> emit,
@@ -118,14 +145,8 @@ class ScannerBloc extends Bloc<ScannerEvent, ScannerState> {
     emit(ScannerLoading());
 
     try {
-      // Debug: Check if all documents exist
+      // Check if all documents exist
       final validDocuments = _documents.where((doc) => doc.exists).toList();
-      print('DEBUG: Total documents: ${_documents.length}');
-      print('DEBUG: Valid documents: ${validDocuments.length}');
-      
-      for (var doc in _documents) {
-        print('DEBUG: Document ${doc.id}: path=${doc.imagePath}, exists=${doc.exists}');
-      }
       
       if (validDocuments.isEmpty) {
         emit(ScannerError('No valid image files found for PDF generation', List.from(_documents)));
@@ -138,10 +159,8 @@ class ScannerBloc extends Bloc<ScannerEvent, ScannerState> {
       }
       
       final pdfPath = await generatePdfUsecase.call(_documents);
-      print('DEBUG: PDF generated at: $pdfPath');
       emit(PdfGenerated(pdfPath, List.from(_documents)));
     } catch (e) {
-      print('DEBUG: PDF generation error: $e');
       emit(ScannerError('Error generating PDF: $e', List.from(_documents)));
     }
   }

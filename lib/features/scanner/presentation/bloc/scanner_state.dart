@@ -8,7 +8,13 @@ abstract class ScannerState extends Equatable {
   List<Object> get props => [];
 }
 
-class ScannerInitial extends ScannerState {
+// Mixin to provide documents to states
+mixin DocumentsMixin {
+  List<ScannedDocument> get documents;
+}
+
+class ScannerInitial extends ScannerState with DocumentsMixin {
+  @override
   final List<ScannedDocument> documents;
 
   const ScannerInitial([this.documents = const []]);
@@ -17,7 +23,8 @@ class ScannerInitial extends ScannerState {
   List<Object> get props => [documents];
 }
 
-class ScannerLoading extends ScannerState {
+class ScannerLoading extends ScannerState with DocumentsMixin {
+  @override
   final List<ScannedDocument> documents;
 
   const ScannerLoading([this.documents = const []]);
@@ -26,7 +33,8 @@ class ScannerLoading extends ScannerState {
   List<Object> get props => [documents];
 }
 
-class ScannerLoaded extends ScannerState {
+class ScannerLoaded extends ScannerState with DocumentsMixin {
+  @override
   final List<ScannedDocument> documents;
 
   const ScannerLoaded(this.documents);
@@ -35,8 +43,9 @@ class ScannerLoaded extends ScannerState {
   List<Object> get props => [documents];
 }
 
-class ScannerError extends ScannerState {
+class ScannerError extends ScannerState with DocumentsMixin {
   final String message;
+  @override
   final List<ScannedDocument> documents;
 
   const ScannerError(this.message, [this.documents = const []]);
@@ -45,8 +54,9 @@ class ScannerError extends ScannerState {
   List<Object> get props => [message, documents];
 }
 
-class ScannerSuccess extends ScannerState {
+class ScannerSuccess extends ScannerState with DocumentsMixin {
   final String message;
+  @override
   final List<ScannedDocument> documents;
 
   const ScannerSuccess(this.message, this.documents);
@@ -55,7 +65,8 @@ class ScannerSuccess extends ScannerState {
   List<Object> get props => [message, documents];
 }
 
-class ScannerCancelled extends ScannerState {
+class ScannerCancelled extends ScannerState with DocumentsMixin {
+  @override
   final List<ScannedDocument> documents;
 
   const ScannerCancelled(this.documents);
@@ -64,8 +75,9 @@ class ScannerCancelled extends ScannerState {
   List<Object> get props => [documents];
 }
 
-class PdfGenerated extends ScannerState {
+class PdfGenerated extends ScannerState with DocumentsMixin {
   final String pdfPath;
+  @override
   final List<ScannedDocument> documents;
 
   const PdfGenerated(this.pdfPath, this.documents);

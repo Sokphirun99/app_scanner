@@ -23,22 +23,15 @@ class PdfRepositoryImpl implements PdfRepository {
 
     for (var document in documents) {
       try {
-        print('DEBUG: Processing document: ${document.imagePath}');
-        
-        // Check if the image file exists
+        // Processing document
         if (!document.exists) {
-          print('DEBUG: Image file does not exist: ${document.imagePath}');
           continue; // Skip this document instead of throwing
         }
         
-        print('DEBUG: Image file exists, reading bytes...');
-        
-        // Read and decode the image
         final rawImage = document.imageFile.readAsBytesSync();
         final image = img.decodeImage(rawImage);
         
         if (image == null) {
-          print('DEBUG: Could not decode image: ${document.imagePath}');
           continue; // Skip this image if it can't be decoded
         }
         
@@ -55,10 +48,7 @@ class PdfRepositoryImpl implements PdfRepository {
             },
           ),
         );
-        
-        print('DEBUG: Added page to PDF for ${document.imagePath}');
       } catch (e) {
-        print('DEBUG: Error processing image ${document.imagePath}: $e');
         continue; // Skip this image and continue with others
       }
     }
@@ -69,24 +59,18 @@ class PdfRepositoryImpl implements PdfRepository {
         '${AppConstants.pdfFilePrefix}${DateTime.now().millisecondsSinceEpoch}${AppConstants.pdfExtension}';
     final pdfPath = p.join(output.path, pdfName);
     
-    print('DEBUG: PDF will be saved to: $pdfPath');
     final pdfFile = File(pdfPath);
     
     try {
       final pdfBytes = await pdf.save();
-      print('DEBUG: PDF generated, size: ${pdfBytes.length} bytes');
       await pdfFile.writeAsBytes(pdfBytes);
-      print('DEBUG: PDF saved successfully to: $pdfPath');
-      
       // Verify the PDF file exists
       if (pdfFile.existsSync()) {
-        print('DEBUG: PDF file verified at: $pdfPath');
-        print('DEBUG: PDF file size: ${pdfFile.lengthSync()} bytes');
+        // File verification
       } else {
-        print('DEBUG: ERROR: PDF file does not exist at: $pdfPath');
+        // Handle file not found error
       }
     } catch (e) {
-      print('DEBUG: Error saving PDF: $e');
       throw Exception('Error saving PDF to $pdfPath: $e');
     }
 

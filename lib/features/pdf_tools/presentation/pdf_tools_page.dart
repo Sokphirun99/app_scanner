@@ -9,7 +9,7 @@ class PDFToolsPage extends StatefulWidget {
   const PDFToolsPage({super.key});
 
   @override
-  _PDFToolsPageState createState() => _PDFToolsPageState();
+  State<PDFToolsPage> createState() => _PDFToolsPageState();
 }
 
 class _PDFToolsPageState extends State<PDFToolsPage> {

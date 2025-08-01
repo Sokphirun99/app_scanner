@@ -91,13 +91,13 @@ class _ModernLoadingWidgetState extends State<ModernLoadingWidget>
                             end: Alignment.bottomRight,
                             colors: [
                               theme.colorScheme.primary,
-                              theme.colorScheme.primary.withOpacity(0.6),
+                              theme.colorScheme.primary.withValues(alpha: 0.6),
                               theme.colorScheme.secondary,
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
                               blurRadius: 15,
                               spreadRadius: 2,
                             ),
@@ -126,7 +126,7 @@ class _ModernLoadingWidgetState extends State<ModernLoadingWidget>
               width: 200.w,
               height: 6.h,
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant,
+                color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(3.r),
               ),
               child: FractionallySizedBox(
@@ -194,7 +194,7 @@ class _ModernLoadingWidgetState extends State<ModernLoadingWidget>
                       height: 6.h,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(opacity),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: opacity),
                       ),
                     );
                   }),
@@ -246,7 +246,7 @@ class ModernEmptyStateWidget extends StatelessWidget {
                     height: 120.h,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                       border: Border.all(
                         color: theme.colorScheme.primaryContainer,
                         width: 2,
@@ -341,7 +341,7 @@ class ModernErrorWidget extends StatelessWidget {
               height: 120.h,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: theme.colorScheme.errorContainer.withOpacity(0.3),
+                color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
                 border: Border.all(
                   color: theme.colorScheme.errorContainer,
                   width: 2,

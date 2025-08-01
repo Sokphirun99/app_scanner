@@ -4,11 +4,16 @@ abstract class ScannerEvent extends Equatable {
   const ScannerEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
+/// Event to trigger document scanning
 class ScanDocumentEvent extends ScannerEvent {}
 
+/// Event to scan document directly to PDF
+class ScanDocumentToPdfEvent extends ScannerEvent {}
+
+/// Event to handle scan cancellation
 class ScanCancelledEvent extends ScannerEvent {}
 
 class GeneratePdfEvent extends ScannerEvent {}

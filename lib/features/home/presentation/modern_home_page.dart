@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../scanner/presentation/scanner_home_page.dart';
+import '../../scanner/presentation/scanner_page.dart';
+import '../../scanner/presentation/bloc/scanner_bloc.dart';
+import '../../scanner/presentation/bloc/scanner_event.dart';
 
 class ModernHomePage extends StatefulWidget {
   const ModernHomePage({super.key});
@@ -18,7 +21,7 @@ class _ModernHomePageState extends State<ModernHomePage>
 
   final List<Widget> _pages = [
     const HomeTabContent(),
-    const ScannerHomePage(),
+    const ScannerPage(),
     const PlaceholderTab(title: 'PDF Tools'),
     const SettingsTabContent(),
   ];
@@ -43,7 +46,7 @@ class _ModernHomePageState extends State<ModernHomePage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: PageView(
         controller: _pageController,
@@ -54,12 +57,25 @@ class _ModernHomePageState extends State<ModernHomePage>
         },
         children: _pages,
       ),
+      floatingActionButton:
+          _currentIndex == 1
+              ? FloatingActionButton(
+                onPressed:
+                    () => context.read<ScannerBloc>().add(ScanDocumentEvent()),
+                backgroundColor: theme.colorScheme.primary,
+                child: const Icon(
+                  Icons.document_scanner_outlined,
+                  color: Colors.white,
+                ),
+              )
+              : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -111,7 +127,7 @@ class HomeTabContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -146,7 +162,7 @@ class HomeTabContent extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Icon(
@@ -192,10 +208,7 @@ class HomeTabContent extends StatelessWidget {
                   const SizedBox(height: 16),
                   const Text(
                     'Scan, edit, and share documents with ease',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                 ],
               ),
@@ -257,27 +270,17 @@ class HomeTabContent extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.3),
+        color: color.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withOpacity(0.5),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            size: 32,
-            color: color,
-          ),
+          Icon(icon, size: 32, color: color),
           const SizedBox(height: 8),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           Text(
             subtitle,
@@ -315,10 +318,11 @@ class HomeTabContent extends StatelessWidget {
                 childAspectRatio: 1.2,
                 children: AnimationConfiguration.toStaggeredList(
                   duration: const Duration(milliseconds: 375),
-                  childAnimationBuilder: (widget) => SlideAnimation(
-                    horizontalOffset: 50.0,
-                    child: FadeInAnimation(child: widget),
-                  ),
+                  childAnimationBuilder:
+                      (widget) => SlideAnimation(
+                        horizontalOffset: 50.0,
+                        child: FadeInAnimation(child: widget),
+                      ),
                   children: [
                     _buildActionCard(
                       context,
@@ -328,13 +332,13 @@ class HomeTabContent extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           theme.colorScheme.primary,
-                          theme.colorScheme.primary.withOpacity(0.7),
+                          theme.colorScheme.primary.withValues(alpha: 0.7),
                         ],
                       ),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => const ScannerHomePage(),
+                            builder: (context) => const ScannerPage(),
                           ),
                         );
                       },
@@ -347,7 +351,7 @@ class HomeTabContent extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           theme.colorScheme.secondary,
-                          theme.colorScheme.secondary.withOpacity(0.7),
+                          theme.colorScheme.secondary.withValues(alpha: 0.7),
                         ],
                       ),
                       onTap: () {
@@ -362,7 +366,7 @@ class HomeTabContent extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           theme.colorScheme.tertiary,
-                          theme.colorScheme.tertiary.withOpacity(0.7),
+                          theme.colorScheme.tertiary.withValues(alpha: 0.7),
                         ],
                       ),
                       onTap: () {
@@ -382,7 +386,7 @@ class HomeTabContent extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           Colors.orange,
-                          Colors.orange.withOpacity(0.7),
+                          Colors.orange.withValues(alpha: 0.7),
                         ],
                       ),
                       onTap: () {
@@ -417,33 +421,35 @@ class HomeTabContent extends StatelessWidget {
             gradient: gradient,
             borderRadius: BorderRadius.circular(16),
           ),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 40,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              Flexible(child: Icon(icon, size: 32, color: Colors.white)),
+              const SizedBox(height: 8),
+              Flexible(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.white70,
+              const SizedBox(height: 2),
+              Flexible(
+                child: Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 11, color: Colors.white70),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -523,53 +529,48 @@ class HomeTabContent extends StatelessWidget {
     required Color iconColor,
   }) {
     return Builder(
-      builder: (context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: iconColor,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                    ),
+      builder:
+          (context) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  child: Icon(icon, color: iconColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
-            Text(
-              time,
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -594,89 +595,77 @@ class SettingsTabContent extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _buildSettingsSection(
-            context,
-            'General',
-            [
-              _buildSettingsItem(
-                context,
-                icon: Icons.palette_outlined,
-                title: 'Theme',
-                subtitle: 'System default',
-                onTap: () {},
-              ),
-              _buildSettingsItem(
-                context,
-                icon: Icons.language_outlined,
-                title: 'Language',
-                subtitle: 'English',
-                onTap: () {},
-              ),
-              _buildSettingsItem(
-                context,
-                icon: Icons.storage_outlined,
-                title: 'Storage',
-                subtitle: '1.2 GB used',
-                onTap: () {},
-              ),
-            ],
-          ),
+          _buildSettingsSection(context, 'General', [
+            _buildSettingsItem(
+              context,
+              icon: Icons.palette_outlined,
+              title: 'Theme',
+              subtitle: 'System default',
+              onTap: () {},
+            ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.language_outlined,
+              title: 'Language',
+              subtitle: 'English',
+              onTap: () {},
+            ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.storage_outlined,
+              title: 'Storage',
+              subtitle: '1.2 GB used',
+              onTap: () {},
+            ),
+          ]),
           const SizedBox(height: 24),
-          _buildSettingsSection(
-            context,
-            'Scanning',
-            [
-              _buildSettingsItem(
-                context,
-                icon: Icons.high_quality_outlined,
-                title: 'Image Quality',
-                subtitle: 'High',
-                onTap: () {},
-              ),
-              _buildSettingsItem(
-                context,
-                icon: Icons.auto_fix_high_outlined,
-                title: 'Auto Enhancement',
-                subtitle: 'Enabled',
-                onTap: () {},
-              ),
-              _buildSettingsItem(
-                context,
-                icon: Icons.save_outlined,
-                title: 'Auto Save',
-                subtitle: 'To Downloads folder',
-                onTap: () {},
-              ),
-            ],
-          ),
+          _buildSettingsSection(context, 'Scanning', [
+            _buildSettingsItem(
+              context,
+              icon: Icons.high_quality_outlined,
+              title: 'Image Quality',
+              subtitle: 'High',
+              onTap: () {},
+            ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.auto_fix_high_outlined,
+              title: 'Auto Enhancement',
+              subtitle: 'Enabled',
+              onTap: () {},
+            ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.save_outlined,
+              title: 'Auto Save',
+              subtitle: 'To Downloads folder',
+              onTap: () {},
+            ),
+          ]),
           const SizedBox(height: 24),
-          _buildSettingsSection(
-            context,
-            'About',
-            [
-              _buildSettingsItem(
-                context,
-                icon: Icons.info_outline,
-                title: 'App Version',
-                subtitle: '1.0.0',
-                onTap: () {},
-              ),
-              _buildSettingsItem(
-                context,
-                icon: Icons.privacy_tip_outlined,
-                title: 'Privacy Policy',
-                subtitle: 'View our privacy policy',
-                onTap: () {},
-              ),
-              _buildSettingsItem(
-                context,
-                icon: Icons.help_outline,
-                title: 'Help & Support',
-                subtitle: 'Get help and contact us',
-                onTap: () {},
-              ),
-            ],
-          ),
+          _buildSettingsSection(context, 'About', [
+            _buildSettingsItem(
+              context,
+              icon: Icons.info_outline,
+              title: 'App Version',
+              subtitle: '1.0.0',
+              onTap: () {},
+            ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.privacy_tip_outlined,
+              title: 'Privacy Policy',
+              subtitle: 'View our privacy policy',
+              onTap: () {},
+            ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.help_outline,
+              title: 'Help & Support',
+              subtitle: 'Get help and contact us',
+              onTap: () {},
+            ),
+          ]),
         ],
       ),
     );
@@ -688,7 +677,7 @@ class SettingsTabContent extends StatelessWidget {
     List<Widget> items,
   ) {
     final theme = Theme.of(context);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -700,11 +689,7 @@ class SettingsTabContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Card(
-          child: Column(
-            children: items,
-          ),
-        ),
+        Card(child: Column(children: items)),
       ],
     );
   }
@@ -717,12 +702,9 @@ class SettingsTabContent extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
-    
+
     return ListTile(
-      leading: Icon(
-        icon,
-        color: theme.colorScheme.primary,
-      ),
+      leading: Icon(icon, color: theme.colorScheme.primary),
       title: Text(title),
       subtitle: Text(subtitle),
       trailing: const Icon(Icons.chevron_right),
@@ -733,18 +715,15 @@ class SettingsTabContent extends StatelessWidget {
 
 class PlaceholderTab extends StatelessWidget {
   final String title;
-  
+
   const PlaceholderTab({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        automaticallyImplyLeading: false,
-      ),
+      appBar: AppBar(title: Text(title), automaticallyImplyLeading: false),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

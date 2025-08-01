@@ -81,7 +81,7 @@ class _ModernDocumentCardState extends State<ModernDocumentCard>
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.shadow.withOpacity(0.1),
+                    color: theme.colorScheme.shadow.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -104,7 +104,7 @@ class _ModernDocumentCardState extends State<ModernDocumentCard>
                           borderRadius: BorderRadius.vertical(
                             top: Radius.circular(16.r),
                           ),
-                          color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                         ),
                         child: _buildDocumentPreview(context, theme),
                       ),
@@ -218,8 +218,8 @@ class _ModernDocumentCardState extends State<ModernDocumentCard>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.red.withOpacity(0.1),
-              Colors.red.withOpacity(0.05),
+              Colors.red.withValues(alpha: 0.1),
+              Colors.red.withValues(alpha: 0.05),
             ],
           ),
         ),
@@ -236,7 +236,7 @@ class _ModernDocumentCardState extends State<ModernDocumentCard>
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
@@ -271,7 +271,7 @@ class _ModernDocumentCardState extends State<ModernDocumentCard>
 
   Widget _buildErrorWidget(ThemeData theme) {
     return Container(
-      color: theme.colorScheme.errorContainer.withOpacity(0.1),
+      color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

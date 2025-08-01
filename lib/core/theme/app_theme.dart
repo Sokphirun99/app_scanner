@@ -24,6 +24,12 @@ class AppTheme {
   static const Color darkSurfaceVariant = Color(0xFF49454F);
   static const Color darkOnSurface = Color(0xFFE6E0E9);
   
+  // Additional theme colors for compatibility
+  static const Color surfaceColor = surface;
+  static const Color accentColor = Color(0xFF7C4DFF);
+  static const Color textPrimaryColor = onSurface;
+  static const Color textSecondaryColor = onSurfaceVariant;
+  
   // Light Theme
   static ThemeData get lightTheme {
     return ThemeData(
@@ -37,7 +43,7 @@ class AppTheme {
         tertiary: tertiary,
         tertiaryContainer: tertiaryContainer,
         surface: surface,
-        surfaceVariant: surfaceVariant,
+        surfaceContainerHighest: surfaceVariant,
         outline: outline,
         onSurface: onSurface,
         onSurfaceVariant: onSurfaceVariant,
@@ -129,7 +135,7 @@ class AppTheme {
       ),
       cardTheme: CardTheme(
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
         surfaceTintColor: primaryColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -141,7 +147,7 @@ class AppTheme {
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 1,
-          shadowColor: Colors.black.withOpacity(0.1),
+          shadowColor: Colors.black.withValues(alpha: 0.1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -238,7 +244,7 @@ class AppTheme {
         tertiary: Color(0xFFEFB8C8),
         tertiaryContainer: Color(0xFF633B48),
         surface: darkSurface,
-        surfaceVariant: darkSurfaceVariant,
+        surfaceContainerHighest: darkSurfaceVariant,
         outline: Color(0xFF948F99),
         onSurface: darkOnSurface,
         onSurfaceVariant: Color(0xFFCAC4D0),
@@ -259,7 +265,7 @@ class AppTheme {
       cardTheme: CardTheme(
         elevation: 1,
         color: const Color(0xFF211F26),
-        shadowColor: Colors.black.withOpacity(0.3),
+        shadowColor: Colors.black.withValues(alpha: 0.3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -286,15 +292,15 @@ class AppTheme {
   );
   
   static BoxDecoration get glassContainer => BoxDecoration(
-    color: Colors.white.withOpacity(0.1),
+    color: Colors.white.withValues(alpha: 0.1),
     borderRadius: BorderRadius.circular(16),
     border: Border.all(
-      color: Colors.white.withOpacity(0.2),
+      color: Colors.white.withValues(alpha: 0.2),
       width: 1,
     ),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.1),
+        color: Colors.black.withValues(alpha: 0.1),
         blurRadius: 10,
         offset: const Offset(0, 4),
       ),
@@ -302,7 +308,7 @@ class AppTheme {
   );
   
   static BoxShadow get softShadow => BoxShadow(
-    color: Colors.black.withOpacity(0.05),
+    color: Colors.black.withValues(alpha: 0.05),
     blurRadius: 10,
     offset: const Offset(0, 2),
   );
