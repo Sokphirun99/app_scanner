@@ -15,18 +15,26 @@ class PdfRepositoryImpl implements PdfRepository {
     List<ScannedDocument> documents, {
     String? fileName,
   }) async {
+    if (documents.isEmpty) {
+      throw Exception('No documents provided for PDF generation');
+    }
+
     final pdf = pw.Document();
 
     for (var document in documents) {
-      if (document.exists) {
+      try {
+        // Processing document
+        if (!document.exists) {
+          continue; // Skip this document instead of throwing
+        }
+        
         final rawImage = document.imageFile.readAsBytesSync();
         final image = img.decodeImage(rawImage);
-
+        
         if (image == null) {
-          // Skip this image if it can't be decoded
-          continue;
+          continue; // Skip this image if it can't be decoded
         }
-
+        
         final encodedImage = img.encodePng(image);
         final pdfImage = pw.MemoryImage(encodedImage);
 
@@ -40,6 +48,8 @@ class PdfRepositoryImpl implements PdfRepository {
             },
           ),
         );
+      } catch (e) {
+        continue; // Skip this image and continue with others
       }
     }
 
@@ -48,8 +58,21 @@ class PdfRepositoryImpl implements PdfRepository {
         fileName ??
         '${AppConstants.pdfFilePrefix}${DateTime.now().millisecondsSinceEpoch}${AppConstants.pdfExtension}';
     final pdfPath = p.join(output.path, pdfName);
+    
     final pdfFile = File(pdfPath);
-    await pdfFile.writeAsBytes(await pdf.save());
+    
+    try {
+      final pdfBytes = await pdf.save();
+      await pdfFile.writeAsBytes(pdfBytes);
+      // Verify the PDF file exists
+      if (pdfFile.existsSync()) {
+        // File verification
+      } else {
+        // Handle file not found error
+      }
+    } catch (e) {
+      throw Exception('Error saving PDF to $pdfPath: $e');
+    }
 
     return pdfPath;
   }

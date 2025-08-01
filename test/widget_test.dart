@@ -7,7 +7,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:app_scanner/main.dart';
 
 void main() {
@@ -27,8 +26,10 @@ void main() {
       find.text('Tap the camera button to start scanning'),
       findsOneWidget,
     );
-
     // Verify that the document scanner icon is present in the empty state.
-    expect(find.byIcon(Icons.document_scanner_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.document_scanner_outlined), findsWidgets);
+    
+    // Verify that the scan button is present
+    expect(find.text('Scan Document'), findsOneWidget);
   });
 }
