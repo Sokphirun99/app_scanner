@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 
 class ModernHomePage extends StatefulWidget {
@@ -313,11 +314,8 @@ class HomeTabContent extends StatelessWidget {
                         ],
                       ),
                       onTap: () {
-                        // Navigate to PDF Tools tab (index 1 after removing Scanner)
-                        // This will need to be handled by the parent widget
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Scanner functionality moved to PDF Tools')),
-                        );
+                        // Navigate to Scanner page
+                        context.pushScanner();
                       },
                     ),
                     _buildActionCard(

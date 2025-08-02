@@ -53,5 +53,21 @@
 	<string>This app needs access to photo library to save scanned documents</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This app needs access to photo library to save scanned documents</string>
+	
+	<!-- Additional permissions for document scanning -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app may access microphone for video features</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>This app needs access to documents folder to save scanned files</string>
+	
+	<!-- Image picker permissions -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to photo library to import documents</string>
+	
+	<!-- iOS Background modes -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-processing</string>
+	</array>
 </dict>
 </plist>

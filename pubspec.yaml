@@ -56,6 +56,7 @@ dependencies:
   
   # Image processing and document scanning
   image: ^4.1.0
+  image_picker: ^1.1.2
   flutter_doc_scanner: ^0.0.16
   
   # Storage
