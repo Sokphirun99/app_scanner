@@ -1,0 +1,15 @@
+# Images Directory
+
+Place your app images here:
+
+## Recommended Files:
+- `app_logo.png` - Main app logo
+- `app_icon.png` - App icon for different sizes
+- `splash_background.png` - Splash screen background
+- `scanner_overlay.png` - Camera overlay graphics
+- `pdf_preview.png` - PDF file preview placeholder
+
+## Organization:
+- Use descriptive filenames
+- Group related images in subdirectories if needed
+- Provide 2x and 3x variants for high-density displays

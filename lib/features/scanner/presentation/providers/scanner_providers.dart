@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../../shared/models/scanned_document.dart';
@@ -57,14 +58,12 @@ class ScannerState {
 class ScannerNotifier extends StateNotifier<ScannerState> {
   final ScanDocumentUsecase _scanDocumentUsecase;
 
-  ScannerNotifier(this._scanDocumentUsecase) : super(const ScannerState(
-    status: ScannerStatus.initial,
-    documents: [],
-  ));
+  ScannerNotifier(this._scanDocumentUsecase)
+    : super(const ScannerState(status: ScannerStatus.initial, documents: []));
 
   Future<void> scanDocument() async {
     state = state.copyWith(status: ScannerStatus.loading);
-    
+
     try {
       // Check camera permission
       final cameraPermission = await Permission.camera.status;
@@ -78,7 +77,7 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
           return;
         }
       }
-      
+
       final documents = await _scanDocumentUsecase.call();
       state = state.copyWith(
         status: ScannerStatus.success,
@@ -95,7 +94,7 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
 
   Future<void> scanDocumentToPdf() async {
     state = state.copyWith(status: ScannerStatus.loading);
-    
+
     try {
       // Check camera permission
       final cameraPermission = await Permission.camera.status;
@@ -109,12 +108,12 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
           return;
         }
       }
-      
+
       await _scanDocumentUsecase.call();
-      
+
       // Simulate PDF generation
       await Future.delayed(const Duration(seconds: 2));
-      
+
       state = state.copyWith(
         status: ScannerStatus.pdfGenerated,
         documents: [], // Clear documents after PDF generation
@@ -138,11 +137,11 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
     }
 
     state = state.copyWith(status: ScannerStatus.loading);
-    
+
     try {
       // Simulate PDF generation
       await Future.delayed(const Duration(seconds: 2));
-      
+
       state = state.copyWith(
         status: ScannerStatus.pdfGenerated,
         lastGeneratedPdfPath: '/path/to/generated.pdf',
@@ -171,7 +170,7 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
   void removeDocument(int index) {
     if (index >= 0 && index < state.documents.length) {
       final updatedDocuments = List<ScannedDocument>.from(state.documents);
-      
+
       // Delete the file if it exists
       try {
         final file = File(updatedDocuments[index].imagePath);
@@ -180,9 +179,9 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
         }
       } catch (e) {
         // Log error but continue with removal
-        print('Error deleting file: $e');
+        debugPrint('Error deleting file: $e');
       }
-      
+
       updatedDocuments.removeAt(index);
       state = state.copyWith(
         status: ScannerStatus.loaded,
@@ -201,10 +200,10 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
         }
       } catch (e) {
         // Log error but continue
-        print('Error deleting file: $e');
+        debugPrint('Error deleting file: $e');
       }
     }
-    
+
     state = state.copyWith(
       status: ScannerStatus.initial,
       documents: [],
@@ -226,8 +225,7 @@ final scanDocumentUsecaseProvider = Provider<ScanDocumentUsecase>((ref) {
 });
 
 // Main provider
-final scannerNotifierProvider = StateNotifierProvider<ScannerNotifier, ScannerState>((ref) {
-  return ScannerNotifier(
-    ref.read(scanDocumentUsecaseProvider),
-  );
-});
+final scannerNotifierProvider =
+    StateNotifierProvider<ScannerNotifier, ScannerState>((ref) {
+      return ScannerNotifier(ref.read(scanDocumentUsecaseProvider));
+    });

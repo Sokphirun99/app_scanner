@@ -22,7 +22,7 @@ class ModernDocumentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return GestureDetector(
       onTap: onPreview,
       child: Container(
@@ -50,14 +50,18 @@ class ModernDocumentCard extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(16.r),
+                  ),
                   child: Container(
-                    color: theme.colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    ),
                     child: _buildDocumentPreview(context),
                   ),
                 ),
               ),
-              
+
               // Document Info
               Expanded(
                 flex: 1,
@@ -90,9 +94,9 @@ class ModernDocumentCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      
+
                       SizedBox(height: 4.h),
-                      
+
                       // Actions row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -104,7 +108,7 @@ class ModernDocumentCard extends StatelessWidget {
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
-                          
+
                           // Action buttons
                           Row(
                             mainAxisSize: MainAxisSize.min,
@@ -117,7 +121,7 @@ class ModernDocumentCard extends StatelessWidget {
                                   color: theme.colorScheme.primary,
                                 ),
                               ),
-                              
+
                               if (onShare != null) ...[
                                 SizedBox(width: 8.w),
                                 GestureDetector(
@@ -129,7 +133,7 @@ class ModernDocumentCard extends StatelessWidget {
                                   ),
                                 ),
                               ],
-                              
+
                               SizedBox(width: 8.w),
                               GestureDetector(
                                 onTap: onDelete,
@@ -164,7 +168,7 @@ class ModernDocumentCard extends StatelessWidget {
 
   Widget _buildPdfPreview(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: double.infinity,
       child: Column(
@@ -190,34 +194,33 @@ class ModernDocumentCard extends StatelessWidget {
   }
 
   Widget _buildImagePreview(BuildContext context) {
-    final theme = Theme.of(context);
     final imageFile = File(document.imagePath);
-    
+
     return imageFile.existsSync()
         ? Image.file(
-            imageFile,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            // Performance optimization: cache images
-            frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-              if (wasSynchronouslyLoaded) return child;
-              return AnimatedOpacity(
-                opacity: frame == null ? 0 : 1,
-                duration: const Duration(milliseconds: 200),
-                child: child,
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
-              return _buildErrorPreview(context);
-            },
-          )
+          imageFile,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          // Performance optimization: cache images
+          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+            if (wasSynchronouslyLoaded) return child;
+            return AnimatedOpacity(
+              opacity: frame == null ? 0 : 1,
+              duration: const Duration(milliseconds: 200),
+              child: child,
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return _buildErrorPreview(context);
+          },
+        )
         : _buildErrorPreview(context);
   }
 
   Widget _buildErrorPreview(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: double.infinity,
       child: Column(
@@ -252,7 +255,7 @@ class ModernDocumentCard extends StatelessWidget {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inMinutes < 1) {
       return 'Just now';
     } else if (difference.inHours < 1) {
@@ -287,7 +290,7 @@ class ModernEmptyStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Center(
       child: Padding(
         padding: EdgeInsets.all(32.w),
@@ -297,7 +300,9 @@ class ModernEmptyStateWidget extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(24.w),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -306,9 +311,9 @@ class ModernEmptyStateWidget extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            
+
             SizedBox(height: 24.h),
-            
+
             Text(
               title,
               style: TextStyle(
@@ -318,9 +323,9 @@ class ModernEmptyStateWidget extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             SizedBox(height: 12.h),
-            
+
             Text(
               subtitle,
               style: TextStyle(
@@ -330,16 +335,13 @@ class ModernEmptyStateWidget extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             if (actionText != null && onAction != null) ...[
               SizedBox(height: 32.h),
               ElevatedButton.icon(
                 onPressed: onAction,
                 icon: Icon(Icons.add, size: 20.sp),
-                label: Text(
-                  actionText!,
-                  style: TextStyle(fontSize: 16.sp),
-                ),
+                label: Text(actionText!, style: TextStyle(fontSize: 16.sp)),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(
                     horizontal: 24.w,

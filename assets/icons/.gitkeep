@@ -1,0 +1,20 @@
+# Icons Directory
+
+Place custom icons here:
+
+## Recommended Files:
+- `scan.png` - Scan document icon
+- `gallery.png` - Gallery access icon
+- `camera.png` - Camera icon
+- `pdf.png` - PDF file icon
+- `share.png` - Share functionality icon
+- `delete.png` - Delete action icon
+- `edit.png` - Edit document icon
+- `preview.png` - Preview icon
+
+## Sizes:
+Provide multiple sizes for different use cases:
+- 24x24 for small UI elements
+- 32x32 for medium buttons
+- 48x48 for larger actions
+- 64x64 for prominent features
