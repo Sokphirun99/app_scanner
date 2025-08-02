@@ -20,7 +20,7 @@ class DocScannerService {
 
       // Start the scanner - get images explicitly
       final result = await _scanner.getScannedDocumentAsImages(page: pageLimit);
-      
+
       if (result != null && result is List) {
         // Process the scanned images
         final List<String> savedImagePaths = [];
@@ -55,7 +55,7 @@ class DocScannerService {
       throw Exception('Error during document scanning: $e');
     }
   }
-  
+
   /// Scan documents and get the result as a PDF
   Future<String?> scanDocumentsAsPdf({int pageLimit = 5}) async {
     try {

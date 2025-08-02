@@ -1,174 +1,184 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../../shared/models/scanned_document.dart';
-import 'bloc/scanner_bloc.dart';
-import 'bloc/scanner_event.dart';
-import 'bloc/scanner_state.dart';
-import 'widgets/modern_document_card.dart';
+import 'providers/scanner_providers.dart';
+import 'widgets/modern_document_card_optimized.dart' as optimized;
 import 'widgets/modern_loading_widget.dart';
 
-class ScannerPage extends StatelessWidget {
+class ScannerPage extends ConsumerWidget {
   const ScannerPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scannerState = ref.watch(scannerNotifierProvider);
+
+    // Listen for state changes and show notifications
+    ref.listen<ScannerState>(scannerNotifierProvider, (previous, next) {
+      if (previous != null && next.hasError && next.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+      } else if (previous != null &&
+          next.status == ScannerStatus.success &&
+          next.lastSuccessMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.lastSuccessMessage!),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+          ),
+        );
+      } else if (previous != null &&
+          next.status == ScannerStatus.pdfGenerated) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('PDF generated and saved successfully!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            action:
+                next.lastGeneratedPdfPath != null
+                    ? SnackBarAction(
+                      label: 'Share',
+                      textColor: Colors.white,
+                      onPressed:
+                          () => ref
+                              .read(scannerNotifierProvider.notifier)
+                              .sharePdf(next.lastGeneratedPdfPath!),
+                    )
+                    : null,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Document Scanner',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
         actions: [
-          BlocBuilder<ScannerBloc, ScannerState>(builder: (context, state) {
-            final documents = _getDocuments(state);
-            if (documents.isNotEmpty) {
-              return IconButton(
-                icon: Icon(Icons.delete_sweep_outlined),
-                onPressed: () => context.read<ScannerBloc>().add(ClearDocumentsEvent()),
-                tooltip: 'Clear All',
-              );
-            }
-            return const SizedBox.shrink();
-          }),
+          if (scannerState.documents.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_sweep_outlined),
+              onPressed:
+                  () =>
+                      ref
+                          .read(scannerNotifierProvider.notifier)
+                          .clearDocuments(),
+              tooltip: 'Clear All',
+            ),
         ],
       ),
-      body: BlocConsumer<ScannerBloc, ScannerState>(
-        listener: (context, state) {
-          if (state is ScannerError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Theme.of(context).colorScheme.error,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-              ),
-            );
-          } else if (state is ScannerSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-              ),
-            );
-          } else if (state is PdfGenerated) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('PDF generated and saved successfully!'),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                action: SnackBarAction(
-                  label: 'Share',
-                  textColor: Colors.white,
-                  onPressed:
-                      () => context.read<ScannerBloc>().add(
-                        SharePdfEvent(state.pdfPath),
-                      ),
-                ),
-                duration: const Duration(seconds: 4),
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          return _buildBody(context, state);
-        },
-      ),
+      body: _buildBody(context, ref, scannerState),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // PDF Scan Button
-          FloatingActionButton.small(
-            heroTag: 'pdf_scan',
-            onPressed: () => context.read<ScannerBloc>().add(ScanDocumentToPdfEvent()),
-            backgroundColor: Theme.of(context).colorScheme.tertiary,
-            foregroundColor: Theme.of(context).colorScheme.onTertiary,
-            child: const Icon(Icons.picture_as_pdf),
-          ),
-          SizedBox(height: 12.h),
           // Main Scan Button
           FloatingActionButton.extended(
             heroTag: 'scan',
-            onPressed: () => context.read<ScannerBloc>().add(ScanDocumentEvent()),
+            onPressed: () => ref.read(scannerNotifierProvider.notifier).scanDocument(),
             icon: Icon(Icons.document_scanner_outlined, size: 24.sp),
             label: Text('Scan Document', style: TextStyle(fontSize: 14.sp)),
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          ),
+          SizedBox(height: 12.h),
+          // PDF Scan Button
+          FloatingActionButton.small(
+            heroTag: 'pdf_scan',
+            onPressed:
+                () =>
+                    ref
+                        .read(scannerNotifierProvider.notifier)
+                        .scanDocumentToPdf(),
+            backgroundColor: Theme.of(context).colorScheme.tertiary,
+            foregroundColor: Theme.of(context).colorScheme.onTertiary,
+            child: const Icon(Icons.picture_as_pdf),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, ScannerState state) {
-    if (state is ScannerLoading) {
+  Widget _buildBody(BuildContext context, WidgetRef ref, ScannerState state) {
+    if (state.isLoading) {
       return const ModernLoadingWidget(message: 'Loading documents...');
     }
 
-    final documents = _getDocuments(state);
-
-    if (documents.isEmpty) {
-      return ModernEmptyStateWidget(
+    if (state.documents.isEmpty) {
+      return optimized.ModernEmptyStateWidget(
         icon: Icons.document_scanner_outlined,
         title: 'No Documents Yet',
         subtitle: 'No documents scanned yet. Tap the scan button to start.',
         actionText: 'Scan Document',
-        onAction: () => context.read<ScannerBloc>().add(ScanDocumentEvent()),
+        onAction:
+            () => ref.read(scannerNotifierProvider.notifier).scanDocument(),
       );
     }
 
     return Column(
       children: [
-        _buildDocumentsHeader(context, documents),
+        _buildDocumentsHeader(context, ref, state.documents),
         Expanded(
-          child: AnimationLimiter(
-            child: GridView.builder(
-              padding: EdgeInsets.all(16.w),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16.w,
-                mainAxisSpacing: 16.h,
-                childAspectRatio: 0.75,
-              ),
-              itemCount: documents.length,
-              itemBuilder: (context, index) {
-                return AnimationConfiguration.staggeredGrid(
-                  position: index,
-                  duration: const Duration(milliseconds: 375),
-                  columnCount: 2,
-                  child: ScaleAnimation(
-                    child: FadeInAnimation(
-                      child: ModernDocumentCard(
-                        document: documents[index],
-                        onPreview: () => _previewImage(context, documents[index].imagePath),
-                        onDelete: () => context.read<ScannerBloc>().add(RemoveDocumentEvent(index)),
-                      ),
-                    ),
-                  ),
-                );
-              },
+          child: GridView.builder(
+            padding: EdgeInsets.all(16.w),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16.w,
+              mainAxisSpacing: 16.h,
+              childAspectRatio: 0.75,
             ),
+            itemCount: state.documents.length,
+            // Add performance optimizations
+            cacheExtent: 1000, // Pre-cache more items
+            physics: const BouncingScrollPhysics(), // Smoother scrolling
+            itemBuilder: (context, index) {
+              // Remove heavy animations for better performance
+              return optimized.ModernDocumentCard(
+                key: ValueKey(
+                  state.documents[index].id,
+                ), // Add key for better widget recycling
+                document: state.documents[index],
+                onPreview:
+                    () => _previewImage(
+                      context,
+                      state.documents[index].imagePath,
+                    ),
+                onDelete:
+                    () => ref
+                        .read(scannerNotifierProvider.notifier)
+                        .removeDocument(index),
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDocumentsHeader(BuildContext context, List<ScannedDocument> documents) {
+  Widget _buildDocumentsHeader(
+    BuildContext context,
+    WidgetRef ref,
+    List<ScannedDocument> documents,
+  ) {
     return Container(
       padding: EdgeInsets.all(16.w),
       child: Row(
@@ -183,7 +193,8 @@ class ScannerPage extends StatelessWidget {
             ),
           ),
           ElevatedButton.icon(
-            onPressed: () => context.read<ScannerBloc>().add(GeneratePdfEvent()),
+            onPressed:
+                () => ref.read(scannerNotifierProvider.notifier).generatePdf(),
             icon: Icon(Icons.picture_as_pdf_outlined, size: 18.sp),
             label: Text('Generate PDF', style: TextStyle(fontSize: 14.sp)),
             style: ElevatedButton.styleFrom(
@@ -216,24 +227,5 @@ class ScannerPage extends StatelessWidget {
             ),
           ),
     );
-  }
-
-  List<ScannedDocument> _getDocuments(ScannerState state) {
-    if (state is ScannerInitial) {
-      return state.documents;
-    } else if (state is ScannerLoaded) {
-      return state.documents;
-    } else if (state is ScannerSuccess) {
-      return state.documents;
-    } else if (state is ScannerError) {
-      return state.documents;
-    } else if (state is PdfGenerated) {
-      return state.documents;
-    } else if (state is ScannerLoading) {
-      return state.documents;
-    } else if (state is ScannerCancelled) {
-      return state.documents;
-    }
-    return [];
   }
 }

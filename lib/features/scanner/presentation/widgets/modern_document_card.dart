@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../shared/models/scanned_document.dart';
 
-class ModernDocumentCard extends StatefulWidget {
+class ModernDocumentCard extends StatelessWidget {
   final ScannedDocument document;
   final VoidCallback onPreview;
   final VoidCallback onDelete;
@@ -19,85 +20,34 @@ class ModernDocumentCard extends StatefulWidget {
   });
 
   @override
-  State<ModernDocumentCard> createState() => _ModernDocumentCardState();
-}
-
-class _ModernDocumentCardState extends State<ModernDocumentCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  void _handleTapDown(TapDownDetails details) {
-    _animationController.forward();
-  }
-
-  void _handleTapUp(TapUpDetails details) {
-    _animationController.reverse();
-  }
-
-  void _handleTapCancel() {
-    _animationController.reverse();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    return AnimatedBuilder(
-      animation: _scaleAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: GestureDetector(
-            onTapDown: _handleTapDown,
-            onTapUp: _handleTapUp,
-            onTapCancel: _handleTapCancel,
-            onTap: widget.onPreview,
-            child: Container(
-              margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Card(
-                elevation: 0,
-                margin: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Document Preview
-                    Expanded(
+    return GestureDetector(
+      onTap: onPreview,
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 4.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Card(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Document Preview - Optimized
+              Expanded(
                       flex: 3,
                       child: Container(
                         decoration: BoxDecoration(
