@@ -3,23 +3,45 @@ import 'dart:convert';
 import '../../../../shared/models/scanned_document.dart';
 import '../../domain/repositories/scanner_repository.dart';
 import '../services/doc_scanner_service.dart';
+import '../services/fallback_scanner_service.dart';
 
 class ScannerRepositoryImpl implements ScannerRepository {
   static const String _documentsKey = 'scanned_documents';
   final DocScannerService _docScannerService = DocScannerService();
+  final FallbackScannerService _fallbackScannerService =
+      FallbackScannerService();
 
   @override
   Future<List<String>> scanDocuments() async {
     try {
-      // Use the new DocScannerService
-      final scannedPaths = await _docScannerService.scanDocuments(pageLimit: 10);
-      return scannedPaths;
+      // Try the main document scanner first
+      final scannedPaths = await _docScannerService.scanDocuments(
+        pageLimit: 10,
+      );
+
+      // If successful and not empty, return the results
+      if (scannedPaths.isNotEmpty) {
+        return scannedPaths;
+      }
+
+      // If main scanner returns empty (could be due to errors), try fallback
+      final fallbackPaths = await _fallbackScannerService
+          .scanDocumentsWithCamera(maxImages: 5);
+      return fallbackPaths;
     } catch (e) {
-      if (e.toString().contains('User cancelled') || 
+      if (e.toString().contains('User cancelled') ||
           e.toString().contains('cancelled')) {
         return []; // Return empty list for cancellation
       }
-      throw Exception('Failed to scan documents: $e');
+
+      // If main scanner fails completely, try fallback
+      try {
+        final fallbackPaths = await _fallbackScannerService
+            .scanDocumentsWithCamera(maxImages: 5);
+        return fallbackPaths;
+      } catch (fallbackError) {
+        throw Exception('Scanning failed: ${e.toString()}');
+      }
     }
   }
 
@@ -28,7 +50,7 @@ class ScannerRepositoryImpl implements ScannerRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       final documentsJson = prefs.getStringList(_documentsKey) ?? [];
-      
+
       return documentsJson.map((json) {
         final map = jsonDecode(json) as Map<String, dynamic>;
         return ScannedDocument.fromJson(map);
@@ -82,7 +104,8 @@ class ScannerRepositoryImpl implements ScannerRepository {
 
   Future<void> _saveDocuments(List<ScannedDocument> documents) async {
     final prefs = await SharedPreferences.getInstance();
-    final documentsJson = documents.map((doc) => jsonEncode(doc.toJson())).toList();
+    final documentsJson =
+        documents.map((doc) => jsonEncode(doc.toJson())).toList();
     await prefs.setStringList(_documentsKey, documentsJson);
   }
 }

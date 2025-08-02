@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../scanner/presentation/scanner_page.dart';
-import '../../scanner/presentation/bloc/scanner_bloc.dart';
-import '../../scanner/presentation/bloc/scanner_event.dart';
 
 class ModernHomePage extends StatefulWidget {
   const ModernHomePage({super.key});
@@ -21,7 +18,6 @@ class _ModernHomePageState extends State<ModernHomePage>
 
   final List<Widget> _pages = [
     const HomeTabContent(),
-    const ScannerPage(),
     const PlaceholderTab(title: 'PDF Tools'),
     const SettingsTabContent(),
   ];
@@ -57,19 +53,6 @@ class _ModernHomePageState extends State<ModernHomePage>
         },
         children: _pages,
       ),
-      floatingActionButton:
-          _currentIndex == 1
-              ? FloatingActionButton(
-                onPressed:
-                    () => context.read<ScannerBloc>().add(ScanDocumentEvent()),
-                backgroundColor: theme.colorScheme.primary,
-                child: const Icon(
-                  Icons.document_scanner_outlined,
-                  color: Colors.white,
-                ),
-              )
-              : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
@@ -98,11 +81,6 @@ class _ModernHomePageState extends State<ModernHomePage>
               icon: Icon(Icons.home_outlined),
               selectedIcon: Icon(Icons.home),
               label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.document_scanner_outlined),
-              selectedIcon: Icon(Icons.document_scanner),
-              label: 'Scanner',
             ),
             NavigationDestination(
               icon: Icon(Icons.picture_as_pdf_outlined),
@@ -336,11 +314,8 @@ class HomeTabContent extends StatelessWidget {
                         ],
                       ),
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const ScannerPage(),
-                          ),
-                        );
+                        // Navigate to Scanner page
+                        context.pushScanner();
                       },
                     ),
                     _buildActionCard(

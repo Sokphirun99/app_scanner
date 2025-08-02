@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#gradient)"/>
+  
+  <!-- Document Scanner Icon -->
+  <rect x="156" y="120" width="200" height="272" rx="16" fill="white" opacity="0.95"/>
+  <rect x="176" y="140" width="160" height="232" rx="8" fill="#f8f9fa" stroke="#e9ecef" stroke-width="2"/>
+  
+  <!-- Scanner Lines -->
+  <line x1="196" y1="180" x2="336" y2="180" stroke="#6c757d" stroke-width="3" stroke-linecap="round"/>
+  <line x1="196" y1="210" x2="316" y2="210" stroke="#6c757d" stroke-width="3" stroke-linecap="round"/>
+  <line x1="196" y1="240" x2="336" y2="240" stroke="#6c757d" stroke-width="3" stroke-linecap="round"/>
+  <line x1="196" y1="270" x2="296" y2="270" stroke="#6c757d" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Scanner Beam -->
+  <rect x="176" y="300" width="160" height="4" fill="url(#scanGradient)" opacity="0.8"/>
+  <rect x="176" y="300" width="160" height="2" fill="#007bff"/>
+  
+  <!-- Camera Icon -->
+  <circle cx="256" cy="350" r="32" fill="#007bff"/>
+  <circle cx="256" cy="350" r="20" fill="white"/>
+  <circle cx="256" cy="350" r="12" fill="#007bff"/>
+  
+  <!-- Gradient Definitions -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="scanGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#007bff;stop-opacity:0" />
+      <stop offset="50%" style="stop-color:#007bff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#007bff;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+</svg>

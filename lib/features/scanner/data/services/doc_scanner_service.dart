@@ -20,7 +20,7 @@ class DocScannerService {
 
       // Start the scanner - get images explicitly
       final result = await _scanner.getScannedDocumentAsImages(page: pageLimit);
-      
+
       if (result != null && result is List) {
         // Process the scanned images
         final List<String> savedImagePaths = [];
@@ -48,24 +48,52 @@ class DocScannerService {
         return [];
       }
     } catch (e) {
-      if (e.toString().contains('cancel') || e.toString().contains('Cancel')) {
-        // User cancelled scanning
+      final errorString = e.toString().toLowerCase();
+
+      // Handle various types of cancellation
+      if (errorString.contains('cancel') ||
+          errorString.contains('cancelled') ||
+          errorString.contains('user cancel')) {
         return [];
       }
+
+      // Handle iOS-specific errors
+      if (errorString.contains('avfoundation') ||
+          errorString.contains('scan_error') ||
+          errorString.contains('couldn\'t be completed')) {
+        // Return empty list for iOS camera errors to prevent crash
+        print('iOS Camera Error: $e');
+        return [];
+      }
+
       throw Exception('Error during document scanning: $e');
     }
   }
-  
+
   /// Scan documents and get the result as a PDF
   Future<String?> scanDocumentsAsPdf({int pageLimit = 5}) async {
     try {
       final result = await _scanner.getScannedDocumentAsPdf(page: pageLimit);
       return result;
     } catch (e) {
-      if (e.toString().contains('cancel') || e.toString().contains('Cancel')) {
-        // User cancelled scanning
+      final errorString = e.toString().toLowerCase();
+
+      // Handle various types of cancellation
+      if (errorString.contains('cancel') ||
+          errorString.contains('cancelled') ||
+          errorString.contains('user cancel')) {
         return null;
       }
+
+      // Handle iOS-specific errors
+      if (errorString.contains('avfoundation') ||
+          errorString.contains('scan_error') ||
+          errorString.contains('couldn\'t be completed')) {
+        // Return null for iOS camera errors to prevent crash
+        print('iOS Camera Error in PDF scan: $e');
+        return null;
+      }
+
       throw Exception('Error during PDF document scanning: $e');
     }
   }

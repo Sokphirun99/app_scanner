@@ -1,0 +1,17 @@
+# Illustrations Directory
+
+Place illustrations and graphics here:
+
+## Recommended Files:
+- `empty_state.svg` - Empty state when no documents
+- `scanning_animation.svg` - Scanning in progress
+- `success_illustration.svg` - Success states
+- `error_illustration.svg` - Error states
+- `onboarding_1.svg` - Onboarding screen 1
+- `onboarding_2.svg` - Onboarding screen 2
+- `tutorial_scan.svg` - How to scan tutorial
+
+## Format:
+- Use SVG for scalable vector graphics
+- Use PNG for complex illustrations
+- Keep file sizes optimized for mobile

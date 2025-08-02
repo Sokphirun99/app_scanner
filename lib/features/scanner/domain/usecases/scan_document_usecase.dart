@@ -11,24 +11,45 @@ class ScanDocumentUsecase {
     try {
       final imagePaths = await repository.scanDocuments();
       final documents = <ScannedDocument>[];
-      
-      
+
       for (String path in imagePaths) {
         if (path.isNotEmpty) {
           final document = ScannedDocument(
-            id: DateTime.now().millisecondsSinceEpoch.toString() + path.hashCode.toString(),
+            id:
+                DateTime.now().millisecondsSinceEpoch.toString() +
+                path.hashCode.toString(),
             imagePath: path,
             createdAt: DateTime.now(),
           );
-          
+
           await repository.addScannedDocument(document);
           documents.add(document);
         }
       }
-      
+
       return documents;
     } catch (e) {
-      throw Exception('Failed to scan documents: $e');
+      final errorString = e.toString().toLowerCase();
+
+      // Provide user-friendly error messages
+      if (errorString.contains('permission')) {
+        throw Exception('Camera permission is required to scan documents');
+      }
+
+      if (errorString.contains('avfoundation') ||
+          errorString.contains('scan_error') ||
+          errorString.contains('camera')) {
+        throw Exception(
+          'Camera error occurred. Please try restarting the app or check camera permissions',
+        );
+      }
+
+      if (errorString.contains('no documents') ||
+          errorString.contains('cancelled')) {
+        return []; // Return empty list for cancellation
+      }
+
+      throw Exception('Scanning failed. Please try again');
     }
   }
 }

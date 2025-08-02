@@ -17,19 +17,22 @@ void main() {
     // Wait for all animations to complete
     await tester.pumpAndSettle();
 
-    // Verify that the app title is displayed.
-    expect(find.text('PDF Scanner'), findsOneWidget);
+    // Verify that the app title is displayed on the home page.
+    expect(find.text('PDF Scanner Pro'), findsOneWidget);
 
-    // Verify that the empty state message is displayed.
-    expect(find.text('No documents scanned yet'), findsOneWidget);
-    expect(
-      find.text('Tap the camera button to start scanning'),
-      findsOneWidget,
-    );
-    // Verify that the document scanner icon is present in the empty state.
-    expect(find.byIcon(Icons.document_scanner_outlined), findsWidgets);
+    // Verify that the navigation tabs are present
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Scanner'), findsOneWidget);
+    expect(find.text('PDF Tools'), findsAtLeastNWidgets(1)); // Can appear in navigation and quick actions
+    expect(find.text('Settings'), findsOneWidget);
     
-    // Verify that the scan button is present
+    // Verify that the Quick Actions section is visible
+    expect(find.text('Quick Actions'), findsOneWidget);
+    
+    // Verify that the scan button is present in quick actions
     expect(find.text('Scan Document'), findsOneWidget);
+    
+    // Verify that scanner icons are present (multiple instances expected)
+    expect(find.byIcon(Icons.document_scanner_outlined), findsWidgets);
   });
 }

@@ -27,14 +27,14 @@ class PdfRepositoryImpl implements PdfRepository {
         if (!document.exists) {
           continue; // Skip this document instead of throwing
         }
-        
+
         final rawImage = document.imageFile.readAsBytesSync();
         final image = img.decodeImage(rawImage);
-        
+
         if (image == null) {
           continue; // Skip this image if it can't be decoded
         }
-        
+
         final encodedImage = img.encodePng(image);
         final pdfImage = pw.MemoryImage(encodedImage);
 
@@ -58,9 +58,9 @@ class PdfRepositoryImpl implements PdfRepository {
         fileName ??
         '${AppConstants.pdfFilePrefix}${DateTime.now().millisecondsSinceEpoch}${AppConstants.pdfExtension}';
     final pdfPath = p.join(output.path, pdfName);
-    
+
     final pdfFile = File(pdfPath);
-    
+
     try {
       final pdfBytes = await pdf.save();
       await pdfFile.writeAsBytes(pdfBytes);
@@ -79,7 +79,11 @@ class PdfRepositoryImpl implements PdfRepository {
 
   @override
   Future<void> sharePdf(String pdfPath) async {
-    await Share.shareXFiles([XFile(pdfPath)]);
+    try {
+      await Share.shareXFiles([XFile(pdfPath)]);
+    } catch (e) {
+      throw Exception('Failed to share PDF: $e');
+    }
   }
 
   @override
